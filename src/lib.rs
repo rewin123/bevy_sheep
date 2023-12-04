@@ -1,16 +1,5 @@
 #![allow(clippy::type_complexity)]
 
-mod actions;
-mod audio;
-mod loading;
-mod menu;
-mod player;
-
-use crate::actions::ActionsPlugin;
-use crate::audio::InternalAudioPlugin;
-use crate::loading::LoadingPlugin;
-use crate::menu::MenuPlugin;
-use crate::player::PlayerPlugin;
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
@@ -35,17 +24,28 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_state::<GameState>().add_plugins((
-            LoadingPlugin,
-            MenuPlugin,
-            ActionsPlugin,
-            InternalAudioPlugin,
-            PlayerPlugin,
-        ));
+        app.add_state::<GameState>();
 
         #[cfg(debug_assertions)]
         {
             app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
         }
+
+        app.add_systems(Startup, just_test_setup);
     }
+}
+
+fn just_test_setup(
+    mut commands : Commands
+) {
+    commands.spawn(SpriteBundle {
+        sprite: Sprite { 
+            color: Color::WHITE,
+            rect : Some(Rect::new(0.0, 0.0, 100.0, 100.0)),
+            ..default()
+        },
+        ..default()
+    });
+
+    commands.spawn(Camera2dBundle::default());
 }
