@@ -27,8 +27,8 @@ impl Plugin for PlayerPlugin {
                 Update,
                 player_movemnt_by_mouse.run_if(in_state(MovementStyle::Mouse)),
             )
-            .add_systems(Update, (change_movement_style, bark));
-            .add_systems(Update, (set_cam_distance, camera_movement))
+            .add_systems(Update, (change_movement_style, bark))
+            .add_systems(Update, (set_cam_distance, camera_movement));
 
     }
 }
