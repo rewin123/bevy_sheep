@@ -2,7 +2,7 @@ use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
 use rand::prelude::*;
 use std::f32::consts::PI;
 
-use crate::player::SpawnPlayer;
+use crate::{player::SpawnPlayer, torch::SpawnTorch};
 
 const TREE_PATH: &str = "test/pine.png";
 
@@ -12,6 +12,7 @@ pub fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
     mut spawn_player_event: EventWriter<SpawnPlayer>,
+    mut spawn_torch: EventWriter<SpawnTorch>
 ) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 100.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
@@ -107,4 +108,18 @@ pub fn setup(
     spawn_player_event.send(SpawnPlayer {
         position: Vec3::new(-r - 10.0, 0.0, 0.0),
     });
+
+    let num_of_torchs = 4;
+
+    for _ in 0..num_of_torchs {
+        let pos = Vec3::new(
+            rng.gen_range(-r..r),
+            0.0,
+            rng.gen_range(-r..r),
+        );
+
+        spawn_torch.send(SpawnTorch {
+            position: pos,
+        });
+    }
 }

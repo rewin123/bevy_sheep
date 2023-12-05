@@ -5,6 +5,9 @@ pub mod physics;
 pub mod player;
 pub mod sheep;
 pub mod test_level;
+pub mod safe_area;
+pub mod torch;
+pub mod common_storage;
 
 use std::f32::consts::PI;
 
@@ -39,7 +42,12 @@ impl Plugin for GamePlugin {
             app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
         }
 
-        app.add_plugins((player::PlayerPlugin, physics::PhysicsPlugin));
+        app.add_plugins((
+            player::PlayerPlugin, 
+            physics::PhysicsPlugin, 
+            common_storage::CommonStoragePlugin, 
+            torch::TorchPlugin,
+        ));
 
         app.add_systems(Startup, (test_level::setup, sheep::setup));
     }
@@ -48,3 +56,4 @@ impl Plugin for GamePlugin {
 pub fn get_sprite_rotation() -> Quat {
     Quat::from_euler(EulerRot::XYZ, PI / 2.0 - PI / 4.0, 0.0, 0.0)
 }
+
