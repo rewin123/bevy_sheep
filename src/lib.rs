@@ -1,7 +1,7 @@
 #![allow(clippy::type_complexity)]
 
-pub mod test_level;
 pub mod debug_diagnostic;
+pub mod test_level;
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
