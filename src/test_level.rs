@@ -1,19 +1,11 @@
-use std::f32::consts::PI;
-
-use bevy::prelude::*;
+use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
 use rand::prelude::*;
+use std::f32::consts::PI;
 
 const TREE_PATH: &str = "test/pine.png";
 const SHEEP_PATH: &str = "test/sheep.png";
 
-fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins)
-        .add_systems(Startup, setup)
-        .run();
-}
-
-fn setup(
+pub fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -46,6 +38,9 @@ fn setup(
     });
 
     //spawn sun
+    let mut cascades = CascadeShadowConfigBuilder::default();
+    cascades.maximum_distance = 1000.0;
+    cascades.minimum_distance = 1.0;
     commands.spawn(DirectionalLightBundle {
         transform: Transform::from_xyz(10.0, 10.0, -10.0).looking_at(Vec3::ZERO, Vec3::Y),
         directional_light: DirectionalLight {
@@ -54,6 +49,8 @@ fn setup(
             illuminance: 50000.0,
             ..default()
         },
+
+        cascade_shadow_config: cascades.build(),
         ..default()
     });
 

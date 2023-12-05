@@ -1,5 +1,7 @@
 #![allow(clippy::type_complexity)]
 
+pub mod test_level;
+pub mod debug_diagnostic;
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
@@ -28,24 +30,10 @@ impl Plugin for GamePlugin {
 
         #[cfg(debug_assertions)]
         {
+            app.add_plugins(debug_diagnostic::DiagnosticPlugin);
             app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
         }
 
-        app.add_systems(Startup, just_test_setup);
+        app.add_systems(Startup, test_level::setup);
     }
-}
-
-fn just_test_setup(
-    mut commands : Commands
-) {
-    commands.spawn(SpriteBundle {
-        sprite: Sprite { 
-            color: Color::WHITE,
-            rect : Some(Rect::new(0.0, 0.0, 100.0, 100.0)),
-            ..default()
-        },
-        ..default()
-    });
-
-    commands.spawn(Camera2dBundle::default());
 }

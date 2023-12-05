@@ -7,30 +7,24 @@ const SHEEP_PATH: &str = "test/sheep.png";
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-
         .add_systems(Startup, setup)
         .run();
 }
 
-fn setup(
-    mut commands : Commands,
-    asset_server: Res<AssetServer>,
-) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
 
     //spawn big grass texture
 
-    commands.spawn(
-        SpriteBundle {
-            transform: Transform::from_translation(Vec3::new(0.0, 0.0, -1000.0)),
-            sprite : Sprite {
-                custom_size: Some(Vec2::new(1000000.0, 1000000.0)),
-                color: Color::rgb(0.0, 0.5, 0.0),
-                ..default()
-            },
+    commands.spawn(SpriteBundle {
+        transform: Transform::from_translation(Vec3::new(0.0, 0.0, -1000.0)),
+        sprite: Sprite {
+            custom_size: Some(Vec2::new(1000000.0, 1000000.0)),
+            color: Color::rgb(0.0, 0.5, 0.0),
             ..default()
-        }
-    );
+        },
+        ..default()
+    });
 
     let r = 300.0;
 
@@ -38,26 +32,21 @@ fn setup(
 
     let mut rng = rand::thread_rng();
     for _ in 0..sheep_count {
-        let random_pos = Vec2::new(
-            rng.gen_range(-r..r),
-            rng.gen_range(-r..r),
-        );
+        let random_pos = Vec2::new(rng.gen_range(-r..r), rng.gen_range(-r..r));
 
         if random_pos.length() > r {
             continue;
         }
 
-
-        commands
-            .spawn(SpriteBundle {
-                texture: asset_server.load(SHEEP_PATH),
-                transform: Transform::from_translation(random_pos.extend(-random_pos.y)),
-                sprite : Sprite {
-                    custom_size: Some(Vec2::new(60.0, 60.0)),
-                    ..default()
-                },
+        commands.spawn(SpriteBundle {
+            texture: asset_server.load(SHEEP_PATH),
+            transform: Transform::from_translation(random_pos.extend(-random_pos.y)),
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(60.0, 60.0)),
                 ..default()
-            });
+            },
+            ..default()
+        });
     }
 
     //spawn trees
@@ -76,15 +65,14 @@ fn setup(
             continue;
         }
 
-        commands
-            .spawn(SpriteBundle {
-                texture: asset_server.load(TREE_PATH),
-                transform: Transform::from_translation(random_pos.extend(-random_pos.y)),
-                sprite : Sprite {
-                    custom_size: Some(Vec2::new(100.0, 100.0)),
-                    ..default()
-                },
+        commands.spawn(SpriteBundle {
+            texture: asset_server.load(TREE_PATH),
+            transform: Transform::from_translation(random_pos.extend(-random_pos.y)),
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(100.0, 100.0)),
                 ..default()
-            });
+            },
+            ..default()
+        });
     }
 }

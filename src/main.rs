@@ -1,14 +1,22 @@
 // disable console on windows for release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use bevy::pbr::{CascadeShadowConfigBuilder, DirectionalLightShadowMap};
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy::winit::WinitWindows;
 use bevy::DefaultPlugins;
-use bevy_game::GamePlugin; // ToDo: Replace bevy_game with your new crate name.
-use std::io::Cursor;
+use bevy_game::GamePlugin;
+use std::f32::consts::PI;
+// ToDo: Replace bevy_game with your new crate name.
 use bevy::asset::AssetMetaCheck;
+use std::io::Cursor;
 use winit::window::Icon;
+
+use rand::prelude::*;
+
+const TREE_PATH: &str = "test/pine.png";
+const SHEEP_PATH: &str = "test/sheep.png";
 
 fn main() {
     App::new()
@@ -17,7 +25,7 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.4, 0.4, 0.4)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                title: "Bevy game".to_string(), // ToDo
+                title: "That's a LOT of sheep".to_string(), // ToDo
                 // Bind to canvas included in `index.html`
                 canvas: Some("#bevy".to_owned()),
                 // The canvas size is constrained in index.html and build/web/styles.css
@@ -28,6 +36,7 @@ fn main() {
             }),
             ..default()
         }))
+        .insert_resource(DirectionalLightShadowMap { size: 4096 })
         .add_plugins(GamePlugin)
         .add_systems(Startup, set_window_icon)
         .run();
