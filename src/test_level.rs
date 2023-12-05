@@ -100,7 +100,7 @@ pub fn setup(
     let tree_material = materials.add(StandardMaterial {
         base_color_texture: Some(tree_texture),
         alpha_mode: AlphaMode::Blend,
-        perceptual_roughness: 0.1,
+        perceptual_roughness: 0.9,
         ..default()
     });
 
@@ -121,7 +121,7 @@ pub fn setup(
             mesh: square.clone(),
             material: tree_material.clone(),
             transform: Transform::from_xyz(pos.x, pos.y + 8.0, pos.z)
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0))
+                .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0 - PI / 4.0, 0.0, 0.0))
                 .with_scale(Vec3::new(10.0, 10.0, 20.0)),
             ..default()
         });
