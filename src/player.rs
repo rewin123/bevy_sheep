@@ -16,6 +16,7 @@ pub enum MovementStyle {
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnPlayer>()
+            .add_event::<Bark>()
             .add_state::<MovementStyle>()
             .add_systems(Update, spawn_player_by_event)
             .add_systems(
@@ -26,7 +27,7 @@ impl Plugin for PlayerPlugin {
                 Update,
                 player_movemnt_by_mouse.run_if(in_state(MovementStyle::Mouse)),
             )
-            .add_systems(Update, change_movement_style);
+            .add_systems(Update, (change_movement_style, bark));
     }
 }
 
@@ -52,6 +53,12 @@ pub struct Dog;
 
 #[derive(Event)]
 pub struct SpawnPlayer {
+    pub position: Vec3,
+}
+
+#[derive(Event)]
+pub struct Bark {
+    pub radius: f32,
     pub position: Vec3,
 }
 
@@ -134,6 +141,23 @@ fn player_movemnt_by_mouse(
     vel.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
 
     vel.0 = vel.0.clamp_length_max(speed);
+}
+
+pub fn bark(
+    player_query: Query<&Transform, With<Player>>,
+    input: Res<Input<KeyCode>>,
+    mut event_writer: EventWriter<Bark>,
+) {
+    let Ok(bark) = player_query.get_single() else {
+        return;
+    };
+
+    if input.pressed(KeyCode::Space) {
+        event_writer.send(Bark {
+            radius: 15.,
+            position: bark.translation,
+        });
+    }
 }
 
 fn player_movemnt_by_wasd(

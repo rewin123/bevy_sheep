@@ -8,7 +8,7 @@ impl Plugin for PhysicsPlugin {
     }
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Reflect)]
 pub struct Velocity(pub Vec3);
 
 fn apply_velocity(mut query: Query<(&Velocity, &mut Transform)>, time: Res<Time>) {

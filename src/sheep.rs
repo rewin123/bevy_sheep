@@ -3,7 +3,89 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use rand::Rng;
 
+use crate::{physics::Velocity, player::Bark};
+
 const SHEEP_PATH: &str = "test/sheep.png";
+
+#[derive(Default, PartialEq, Eq, Debug, Clone, Component, Reflect)]
+pub struct Sheep;
+
+#[derive(Default, PartialEq, Debug, Clone, Component, Reflect)]
+pub struct IsScared(bool, f32);
+
+#[derive(Default, PartialEq, Eq, Debug, Clone, Component, Reflect)]
+#[reflect(Component, Default)]
+pub enum Decision {
+    #[default]
+    Idle,
+    Feed,
+    MoveToSafeZone,
+    MoveOutSafeZone,
+}
+
+#[derive(PartialEq, Debug, Clone, Resource, Reflect)]
+#[reflect(Resource, Default)]
+pub struct StateChance {
+    next_state: Vec<(f32, Decision)>,
+}
+
+impl Default for StateChance {
+    fn default() -> Self {
+        Self {
+            next_state: vec![
+                (0.25, Decision::Idle),
+                (0.5, Decision::Feed),
+                (0.75, Decision::MoveToSafeZone),
+                (1.0, Decision::MoveOutSafeZone),
+            ],
+        }
+    }
+}
+
+pub fn scared_sheeps(
+    mut event_reader: EventReader<Bark>,
+    mut sheeps: Query<(&Sheep, &Transform, &mut Velocity, &mut IsScared)>,
+) {
+    if let Some(bark) = event_reader.read().next() {
+        let bark_origin = bark.position;
+        for mut sheep in &mut sheeps {
+            if sheep.1.translation.distance(bark_origin) <= bark.radius {
+                sheep.3 .0 = true;
+                sheep.2 .0 = sheep.1.translation - bark_origin;
+            }
+        }
+    }
+    event_reader.clear();
+}
+
+pub fn sheep_state(
+    _next_state: Res<StateChance>,
+    mut sheeps: Query<(&Sheep, &mut Velocity, &mut Decision, &IsScared)>,
+) {
+    for mut sheep in &mut sheeps.iter_mut().filter(|query| !query.3 .0) {
+        *sheep.2 = Decision::Feed;
+        *sheep.1 = Velocity(Vec3 {
+            x: 3.,
+            y: 3.,
+            z: 3.,
+        });
+    }
+}
+
+pub fn update_scared_sheeps(
+    time: Res<Time>,
+    mut sheeps: Query<(&Sheep, &mut Velocity, &mut Decision, &mut IsScared)>,
+) {
+    for mut sheep in sheeps.iter_mut().filter(|q| q.3 .0) {
+        if sheep.3 .1 > 2. {
+            *sheep.2 = Decision::Idle;
+            *sheep.1 = Velocity::default();
+            *sheep.3 = IsScared::default();
+        } else {
+            sheep.3 .1 += time.delta_seconds();
+        }
+    }
+}
 
 pub fn setup(
     mut commands: Commands,
@@ -41,18 +123,24 @@ pub fn setup(
             continue;
         }
 
-        commands.spawn(PbrBundle {
-            mesh: square.clone(),
-            material: sheep_material.clone(),
-            transform: Transform::from_xyz(pos.x, pos.y + 3.0, pos.z)
-                .with_rotation(Quat::from_euler(
-                    EulerRot::XYZ,
-                    PI / 2.0 - PI / 4.0,
-                    0.0,
-                    0.0,
-                ))
-                .with_scale(Vec3::splat(10.0)),
-            ..default()
-        });
+        commands.spawn((
+            PbrBundle {
+                mesh: square.clone(),
+                material: sheep_material.clone(),
+                transform: Transform::from_xyz(pos.x, pos.y + 3.0, pos.z)
+                    .with_rotation(Quat::from_euler(
+                        EulerRot::XYZ,
+                        PI / 2.0 - PI / 4.0,
+                        0.0,
+                        0.0,
+                    ))
+                    .with_scale(Vec3::splat(10.0)),
+                ..default()
+            },
+            Sheep,
+            Decision::Idle,
+            Velocity::default(),
+            IsScared(false, 0.),
+        ));
     }
 }

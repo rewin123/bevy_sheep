@@ -42,6 +42,14 @@ impl Plugin for GamePlugin {
         app.add_plugins((player::PlayerPlugin, physics::PhysicsPlugin));
 
         app.add_systems(Startup, (test_level::setup, sheep::setup));
+        // TODO: Move to plugin
+        app.add_systems(
+            Update,
+            (
+                sheep::scared_sheeps.before(sheep::sheep_state),
+                sheep::update_scared_sheeps,
+            ),
+        );
     }
 }
 
