@@ -10,19 +10,22 @@ pub struct PlayerPlugin;
 pub enum MovementStyle {
     Mouse,
     #[default]
-    WASD
+    WASD,
 }
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_event::<SpawnPlayer>()
-
+        app.add_event::<SpawnPlayer>()
             .add_state::<MovementStyle>()
-
             .add_systems(Update, spawn_player_by_event)
-            .add_systems(Update, player_movemnt_by_wasd.run_if(in_state(MovementStyle::WASD)))
-            .add_systems(Update, player_movemnt_by_mouse.run_if(in_state(MovementStyle::Mouse)))
+            .add_systems(
+                Update,
+                player_movemnt_by_wasd.run_if(in_state(MovementStyle::WASD)),
+            )
+            .add_systems(
+                Update,
+                player_movemnt_by_mouse.run_if(in_state(MovementStyle::Mouse)),
+            )
             .add_systems(Update, change_movement_style);
     }
 }
@@ -53,14 +56,17 @@ pub struct SpawnPlayer {
 }
 
 fn spawn_player_by_event(
-    mut commands : Commands,
-    mut event_reader : EventReader<SpawnPlayer>,
+    mut commands: Commands,
+    mut event_reader: EventReader<SpawnPlayer>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for event in event_reader.read() {
-        let plane = meshes.add(Mesh::from(shape::Plane { size: 1.0, ..default() }));
+        let plane = meshes.add(Mesh::from(shape::Plane {
+            size: 1.0,
+            ..default()
+        }));
         let material = materials.add(StandardMaterial {
             base_color_texture: Some(asset_server.load(DOG_PATH)),
             alpha_mode: AlphaMode::Blend,
@@ -73,22 +79,22 @@ fn spawn_player_by_event(
             PbrBundle {
                 mesh: plane.clone(),
                 material: material.clone(),
-                transform: Transform::from_translation(event.position + Vec3::new(0.0, 2.5, 0.0)).with_rotation(get_sprite_rotation()).with_scale(Vec3::splat(5.0)),
+                transform: Transform::from_translation(event.position + Vec3::new(0.0, 2.5, 0.0))
+                    .with_rotation(get_sprite_rotation())
+                    .with_scale(Vec3::splat(5.0)),
                 ..default()
             },
             Player,
             Dog,
-            Velocity::default()
+            Velocity::default(),
         ));
     }
     event_reader.clear();
 }
 
-
-
 fn player_movemnt_by_mouse(
     mut player_query: Query<(&Transform, &mut Velocity), With<Player>>,
-    time : Res<Time>,
+    time: Res<Time>,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
 ) {
@@ -115,9 +121,8 @@ fn player_movemnt_by_mouse(
 
     let globel_cursor = ray.get_point(distance);
 
-
-    let speed : f32 = 25.0;
-    let accel : f32 = 200.0;
+    let speed: f32 = 25.0;
+    let accel: f32 = 200.0;
 
     let dir = (globel_cursor - transform.translation).normalize_or_zero();
 
@@ -126,17 +131,15 @@ fn player_movemnt_by_mouse(
 
     let dspeed = target_speed - vel.0;
 
-
     vel.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
 
     vel.0 = vel.0.clamp_length_max(speed);
-
 }
 
 fn player_movemnt_by_wasd(
     mut player_query: Query<&mut Velocity, With<Player>>,
-    input : Res<Input<KeyCode>>,
-    time : Res<Time>,
+    input: Res<Input<KeyCode>>,
+    time: Res<Time>,
 ) {
     let Ok(mut player) = player_query.get_single_mut() else {
         return;
@@ -174,5 +177,4 @@ fn player_movemnt_by_wasd(
     player.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
 
     player.0 = player.0.clamp_length_max(speed);
-
 }

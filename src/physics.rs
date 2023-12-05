@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 
-
 pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {

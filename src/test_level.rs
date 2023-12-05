@@ -5,18 +5,16 @@ use std::f32::consts::PI;
 use crate::player::SpawnPlayer;
 
 const TREE_PATH: &str = "test/pine.png";
-const SHEEP_PATH: &str = "test/sheep.png";
 
 pub fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
-    mut spawn_player_event: EventWriter<SpawnPlayer>  
+    mut spawn_player_event: EventWriter<SpawnPlayer>,
 ) {
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 100.0, 100.0)
-            .looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0.0, 100.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
 
@@ -64,39 +62,10 @@ pub fn setup(
         }
         .into(),
     );
-    let sheep_texture: Handle<Image> = asset_server.load(SHEEP_PATH);
     let tree_texture: Handle<Image> = asset_server.load(TREE_PATH);
 
-    let sheep_material = materials.add(StandardMaterial {
-        base_color_texture: Some(sheep_texture),
-        alpha_mode: AlphaMode::Blend,
-        ..default()
-    });
-
-    //spawn ships
     let r = 50.0;
     let mut rng = rand::thread_rng();
-    let sheep_count = 2000;
-
-    for _ in 0..sheep_count {
-        let x = rng.gen_range(-r..r);
-        let y = 0.0;
-        let z = rng.gen_range(-r..r);
-
-        let pos = Vec3::new(x, y, z);
-        if pos.length() > r {
-            continue;
-        }
-
-        commands.spawn(PbrBundle {
-            mesh: square.clone(),
-            material: sheep_material.clone(),
-            transform: Transform::from_xyz(pos.x, pos.y + 3.0, pos.z)
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0 - PI / 4.0, 0.0, 0.0))
-                .with_scale(Vec3::splat(10.0)),
-            ..default()
-        });
-    }
 
     //spawn trees
     let tree_count = 5000;
@@ -124,13 +93,18 @@ pub fn setup(
             mesh: square.clone(),
             material: tree_material.clone(),
             transform: Transform::from_xyz(pos.x, pos.y + 8.0, pos.z)
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0 - PI / 4.0, 0.0, 0.0))
+                .with_rotation(Quat::from_euler(
+                    EulerRot::XYZ,
+                    PI / 2.0 - PI / 4.0,
+                    0.0,
+                    0.0,
+                ))
                 .with_scale(Vec3::new(10.0, 10.0, 20.0)),
             ..default()
         });
     }
 
     spawn_player_event.send(SpawnPlayer {
-        position : Vec3::new(-r - 10.0, 0.0, 0.0)
+        position: Vec3::new(-r - 10.0, 0.0, 0.0),
     });
 }
