@@ -2,6 +2,8 @@ use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
 use rand::prelude::*;
 use std::f32::consts::PI;
 
+use crate::player::SpawnPlayer;
+
 const TREE_PATH: &str = "test/pine.png";
 const SHEEP_PATH: &str = "test/sheep.png";
 
@@ -10,6 +12,7 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
+    mut spawn_player_event: EventWriter<SpawnPlayer>  
 ) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 100.0, 100.0)
@@ -126,4 +129,8 @@ pub fn setup(
             ..default()
         });
     }
+
+    spawn_player_event.send(SpawnPlayer {
+        position : Vec3::new(-r - 10.0, 0.0, 0.0)
+    });
 }

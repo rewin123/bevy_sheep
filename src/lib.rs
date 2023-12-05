@@ -2,6 +2,10 @@
 
 pub mod debug_diagnostic;
 pub mod test_level;
+pub mod player;
+pub mod physics;
+
+use std::f32::consts::PI;
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
@@ -34,6 +38,15 @@ impl Plugin for GamePlugin {
             app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
         }
 
+        app.add_plugins((
+            player::PlayerPlugin,
+            physics::PhysicsPlugin,
+        ));
+
         app.add_systems(Startup, test_level::setup);
     }
+}
+
+pub fn get_sprite_rotation() -> Quat {
+    Quat::from_euler(EulerRot::XYZ, PI / 2.0 - PI / 4.0, 0.0, 0.0)
 }
