@@ -16,6 +16,7 @@ use bevy::prelude::*;
 // This example game uses States to separate logic
 // See https://bevy-cheatbook.github.io/programming/states.html
 // Or https://github.com/bevyengine/bevy/blob/main/examples/ecs/state.rs
+#[allow(dead_code)]
 #[derive(States, Default, Clone, Eq, PartialEq, Debug, Hash)]
 enum GameState {
     // During the loading State the LoadingPlugin will load our assets
@@ -42,6 +43,14 @@ impl Plugin for GamePlugin {
         app.add_plugins((player::PlayerPlugin, physics::PhysicsPlugin));
 
         app.add_systems(Startup, (test_level::setup, sheep::setup));
+        // TODO: Move to plugin
+        app.add_systems(
+            Update,
+            (
+                sheep::scared_sheeps.before(sheep::sheep_state),
+                sheep::update_scared_sheeps,
+            ),
+        );
     }
 }
 
