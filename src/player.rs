@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::{prelude::*, window::PrimaryWindow, input::mouse::MouseWheel};
 
 use crate::{get_sprite_rotation, physics::Velocity};
 
@@ -184,16 +184,28 @@ fn player_movemnt_by_wasd(
 }
 
 fn camera_movement(
-    mut camera_query: Query<(&mut Transform, &CameraDistance), With<Camera>>,
+    mut camera_query: Query<(&mut Transform, &mut CameraDistance), With<Camera>>,
     player_query: Query<&Transform, (With<Player>, Without<Camera>)>,
-    time : Res<Time>
+    time : Res<Time>,
+    mut scroll_evr: EventReader<MouseWheel>,
 ) {
-    let Ok((mut camera, distance)) = camera_query.get_single_mut() else {
+    let Ok((mut camera, mut distance)) = camera_query.get_single_mut() else {
         return;
     };
     let Ok(player) = player_query.get_single() else {
         return;
     };
+
+    for ev in scroll_evr.read() {
+        let delta = ev.y;
+        if delta < 0.0 {
+            distance.0 *= 1.1;
+        } else if delta > 0.0 {
+            distance.0 /= 1.1;
+        }
+
+        distance.0 = distance.0.clamp(10.0, 300.0);
+    }
 
     let cam_frw = camera.forward();
     let next_cam_pos = player.translation - cam_frw * distance.0;
@@ -201,7 +213,7 @@ fn camera_movement(
     let dp = next_cam_pos - camera.translation;
     let dt = time.delta_seconds();
 
-    camera.translation += dp * dt * 2.0;
+    camera.translation += dp * dt * 1.5 * (150.0 / distance.0);
 }
 
 fn set_cam_distance(
