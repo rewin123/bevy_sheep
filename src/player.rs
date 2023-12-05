@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::PrimaryWindow, input::mouse::MouseWheel};
+use bevy::{input::mouse::MouseWheel, prelude::*, window::PrimaryWindow};
 
 use crate::{get_sprite_rotation, physics::Velocity};
 
@@ -29,7 +29,6 @@ impl Plugin for PlayerPlugin {
             )
             .add_systems(Update, (change_movement_style, bark))
             .add_systems(Update, (set_cam_distance, camera_movement));
-
     }
 }
 
@@ -211,7 +210,7 @@ fn player_movemnt_by_wasd(
 fn camera_movement(
     mut camera_query: Query<(&mut Transform, &mut CameraDistance), With<Camera>>,
     player_query: Query<&Transform, (With<Player>, Without<Camera>)>,
-    time : Res<Time>,
+    time: Res<Time>,
     mut scroll_evr: EventReader<MouseWheel>,
 ) {
     let Ok((mut camera, mut distance)) = camera_query.get_single_mut() else {
@@ -243,10 +242,10 @@ fn camera_movement(
 
 fn set_cam_distance(
     mut commands: Commands,
-    camera_without_dist : Query<(Entity, &Transform), (With<Camera>, Without<CameraDistance>)>,
-    player_query: Query<&Transform, With<Player>>
+    camera_without_dist: Query<(Entity, &Transform), (With<Camera>, Without<CameraDistance>)>,
+    player_query: Query<&Transform, With<Player>>,
 ) {
-    let Ok( player) = player_query.get_single() else {
+    let Ok(player) = player_query.get_single() else {
         return;
     };
 
