@@ -1,9 +1,10 @@
 #![allow(clippy::type_complexity)]
 
 pub mod debug_diagnostic;
-pub mod test_level;
-pub mod player;
 pub mod physics;
+pub mod player;
+pub mod sheep;
+pub mod test_level;
 
 use std::f32::consts::PI;
 
@@ -38,12 +39,9 @@ impl Plugin for GamePlugin {
             app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
         }
 
-        app.add_plugins((
-            player::PlayerPlugin,
-            physics::PhysicsPlugin,
-        ));
+        app.add_plugins((player::PlayerPlugin, physics::PhysicsPlugin));
 
-        app.add_systems(Startup, test_level::setup);
+        app.add_systems(Startup, (test_level::setup, sheep::setup));
     }
 }
 

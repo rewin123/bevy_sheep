@@ -1,22 +1,16 @@
 // disable console on windows for release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use bevy::pbr::{CascadeShadowConfigBuilder, DirectionalLightShadowMap};
+use bevy::pbr::DirectionalLightShadowMap;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy::winit::WinitWindows;
 use bevy::DefaultPlugins;
 use bevy_game::GamePlugin;
-use std::f32::consts::PI;
 // ToDo: Replace bevy_game with your new crate name.
 use bevy::asset::AssetMetaCheck;
 use std::io::Cursor;
 use winit::window::Icon;
-
-use rand::prelude::*;
-
-const TREE_PATH: &str = "test/pine.png";
-const SHEEP_PATH: &str = "test/sheep.png";
 
 fn main() {
     App::new()
