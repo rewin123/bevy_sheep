@@ -12,9 +12,8 @@ pub fn setup(
     asset_server: Res<AssetServer>,
 ) {
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, -100.0)
-            .looking_at(Vec3::ZERO, Vec3::Y)
-            .with_translation(Vec3::new(0.0, -10.0, -150.0)),
+        transform: Transform::from_xyz(0.0, 100.0, 100.0)
+            .looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
 
@@ -28,12 +27,7 @@ pub fn setup(
             base_color: Color::rgb(0.0, 0.5, 0.0),
             ..default()
         }),
-        transform: Transform::from_xyz(0.0, 0.0, 0.0).with_rotation(Quat::from_euler(
-            EulerRot::XYZ,
-            -PI / 4.0,
-            0.0,
-            0.0,
-        )),
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
         ..default()
     });
 
@@ -42,7 +36,7 @@ pub fn setup(
     cascades.maximum_distance = 1000.0;
     cascades.minimum_distance = 1.0;
     commands.spawn(DirectionalLightBundle {
-        transform: Transform::from_xyz(10.0, 10.0, -10.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(100.0, 100.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
         directional_light: DirectionalLight {
             shadows_enabled: true,
             color: Color::WHITE,
@@ -83,8 +77,8 @@ pub fn setup(
 
     for _ in 0..sheep_count {
         let x = rng.gen_range(-r..r);
-        let y = rng.gen_range(-r..r);
-        let z = y;
+        let y = 0.0;
+        let z = rng.gen_range(-r..r);
 
         let pos = Vec3::new(x, y, z);
         if pos.length() > r {
@@ -94,8 +88,8 @@ pub fn setup(
         commands.spawn(PbrBundle {
             mesh: square.clone(),
             material: sheep_material.clone(),
-            transform: Transform::from_xyz(pos.x, pos.y + 4.0, pos.z)
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, -PI / 2.0, PI, 0.0))
+            transform: Transform::from_xyz(pos.x, pos.y + 3.0, pos.z)
+                .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0 - PI / 4.0, 0.0, 0.0))
                 .with_scale(Vec3::splat(10.0)),
             ..default()
         });
@@ -115,8 +109,8 @@ pub fn setup(
 
     for _ in 0..tree_count {
         let x = rng.gen_range(-tree_r..tree_r);
-        let y = rng.gen_range(-tree_r..tree_r);
-        let z = y;
+        let y = 0.0;
+        let z = rng.gen_range(-tree_r..tree_r);
 
         let pos = Vec3::new(x, y, z);
         if pos.length() < cut_r {
@@ -127,7 +121,7 @@ pub fn setup(
             mesh: square.clone(),
             material: tree_material.clone(),
             transform: Transform::from_xyz(pos.x, pos.y + 8.0, pos.z)
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, -PI / 2.0, PI, 0.0))
+                .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0))
                 .with_scale(Vec3::new(10.0, 10.0, 20.0)),
             ..default()
         });
