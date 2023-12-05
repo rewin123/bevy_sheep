@@ -26,6 +26,7 @@ impl Plugin for PlayerPlugin {
                 Update,
                 player_movemnt_by_mouse.run_if(in_state(MovementStyle::Mouse)),
             )
+            .add_systems(Update, (set_cam_distance, camera_movement))
             .add_systems(Update, change_movement_style);
     }
 }
@@ -46,6 +47,9 @@ fn change_movement_style(
 
 #[derive(Component)]
 pub struct Player;
+
+#[derive(Component)]
+pub struct CameraDistance(f32);
 
 #[derive(Component)]
 pub struct Dog;
@@ -177,4 +181,43 @@ fn player_movemnt_by_wasd(
     player.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
 
     player.0 = player.0.clamp_length_max(speed);
+}
+
+fn camera_movement(
+    mut camera_query: Query<(&mut Transform, &CameraDistance), With<Camera>>,
+    player_query: Query<&Transform, (With<Player>, Without<Camera>)>,
+    time : Res<Time>
+) {
+    let Ok((mut camera, distance)) = camera_query.get_single_mut() else {
+        return;
+    };
+    let Ok(player) = player_query.get_single() else {
+        return;
+    };
+
+    let cam_frw = camera.forward();
+    let next_cam_pos = player.translation - cam_frw * distance.0;
+
+    let dp = next_cam_pos - camera.translation;
+    let dt = time.delta_seconds();
+
+    camera.translation += dp * dt * 2.0;
+}
+
+fn set_cam_distance(
+    mut commands: Commands,
+    camera_without_dist : Query<(Entity, &Transform), (With<Camera>, Without<CameraDistance>)>,
+    player_query: Query<&Transform, With<Player>>
+) {
+    let Ok( player) = player_query.get_single() else {
+        return;
+    };
+
+    let Ok((e, camera)) = camera_without_dist.get_single() else {
+        return;
+    };
+
+    let dist = (player.translation - camera.translation).dot(camera.forward());
+
+    commands.entity(e).insert(CameraDistance(dist));
 }
