@@ -138,7 +138,7 @@ fn player_movemnt_by_mouse(
 
     let dir = (globel_cursor - transform.translation).normalize_or_zero();
 
-    let max_speed = speed.min(((globel_cursor - transform.translation).length() * 10.0) as f32);
+    let max_speed = speed.min((globel_cursor - transform.translation).length() * 10.0);
     let target_speed = (dir * speed).clamp_length(0.0, max_speed);
 
     let dspeed = target_speed - vel.0;
