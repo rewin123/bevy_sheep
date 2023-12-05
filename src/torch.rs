@@ -70,7 +70,19 @@ fn spawn_torch(
                 mesh: common_storage.plane.clone(),
                 ..default()
             }
-        ));
+        )).with_children(|parent| {
+            parent.spawn(PointLightBundle {
+                point_light: PointLight {
+                    color: Color::ORANGE,
+                    intensity: 10000.0,
+                    range: 300.0,
+                    shadows_enabled: true,
+                    ..default()
+                },
+                transform: Transform::from_translation(Vec3::new(0.0, 2.0, -0.4)),
+                ..default()
+            });
+        });
     }
     events.clear();
 }
