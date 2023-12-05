@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::PrimaryWindow, input::mouse::MouseWheel};
+use bevy::{input::mouse::MouseWheel, prelude::*, window::PrimaryWindow};
 
 use crate::{get_sprite_rotation, physics::Velocity};
 
@@ -16,6 +16,7 @@ pub enum MovementStyle {
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnPlayer>()
+            .add_event::<Bark>()
             .add_state::<MovementStyle>()
             .add_systems(Update, spawn_player_by_event)
             .add_systems(
@@ -26,8 +27,8 @@ impl Plugin for PlayerPlugin {
                 Update,
                 player_movemnt_by_mouse.run_if(in_state(MovementStyle::Mouse)),
             )
-            .add_systems(Update, (set_cam_distance, camera_movement))
-            .add_systems(Update, change_movement_style);
+            .add_systems(Update, (change_movement_style, bark))
+            .add_systems(Update, (set_cam_distance, camera_movement));
     }
 }
 
@@ -56,6 +57,12 @@ pub struct Dog;
 
 #[derive(Event)]
 pub struct SpawnPlayer {
+    pub position: Vec3,
+}
+
+#[derive(Event)]
+pub struct Bark {
+    pub radius: f32,
     pub position: Vec3,
 }
 
@@ -130,7 +137,7 @@ fn player_movemnt_by_mouse(
 
     let dir = (globel_cursor - transform.translation).normalize_or_zero();
 
-    let max_speed = speed.min(((globel_cursor - transform.translation).length() * 10.0) as f32);
+    let max_speed = speed.min((globel_cursor - transform.translation).length() * 10.0);
     let target_speed = (dir * speed).clamp_length(0.0, max_speed);
 
     let dspeed = target_speed - vel.0;
@@ -138,6 +145,23 @@ fn player_movemnt_by_mouse(
     vel.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
 
     vel.0 = vel.0.clamp_length_max(speed);
+}
+
+pub fn bark(
+    player_query: Query<&Transform, With<Player>>,
+    input: Res<Input<KeyCode>>,
+    mut event_writer: EventWriter<Bark>,
+) {
+    let Ok(bark) = player_query.get_single() else {
+        return;
+    };
+
+    if input.pressed(KeyCode::Space) {
+        event_writer.send(Bark {
+            radius: 15.,
+            position: bark.translation,
+        });
+    }
 }
 
 fn player_movemnt_by_wasd(
@@ -186,7 +210,7 @@ fn player_movemnt_by_wasd(
 fn camera_movement(
     mut camera_query: Query<(&mut Transform, &mut CameraDistance), With<Camera>>,
     player_query: Query<&Transform, (With<Player>, Without<Camera>)>,
-    time : Res<Time>,
+    time: Res<Time>,
     mut scroll_evr: EventReader<MouseWheel>,
 ) {
     let Ok((mut camera, mut distance)) = camera_query.get_single_mut() else {
@@ -218,10 +242,10 @@ fn camera_movement(
 
 fn set_cam_distance(
     mut commands: Commands,
-    camera_without_dist : Query<(Entity, &Transform), (With<Camera>, Without<CameraDistance>)>,
-    player_query: Query<&Transform, With<Player>>
+    camera_without_dist: Query<(Entity, &Transform), (With<Camera>, Without<CameraDistance>)>,
+    player_query: Query<&Transform, With<Player>>,
 ) {
-    let Ok( player) = player_query.get_single() else {
+    let Ok(player) = player_query.get_single() else {
         return;
     };
 
