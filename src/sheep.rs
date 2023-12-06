@@ -1,9 +1,9 @@
 use std::f32::consts::PI;
 
-use bevy::prelude::*;
+use bevy::{pbr::ExtendedMaterial, prelude::*};
 use rand::Rng;
 
-use crate::{physics::Velocity, player::Bark};
+use crate::{physics::Velocity, player::Bark, sprite_material::SpriteExtension};
 
 const SHEEP_PATH: &str = "test/sheep.png";
 
@@ -92,6 +92,7 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
+    mut sprite_material: ResMut<Assets<ExtendedMaterial<StandardMaterial, SpriteExtension>>>,
 ) {
     let square = meshes.add(
         shape::Plane {
@@ -103,9 +104,20 @@ pub fn setup(
     let sheep_texture: Handle<Image> = asset_server.load(SHEEP_PATH);
 
     let sheep_material = materials.add(StandardMaterial {
-        base_color_texture: Some(sheep_texture),
+        base_color_texture: Some(sheep_texture.clone()),
         alpha_mode: AlphaMode::Blend,
         ..default()
+    });
+
+    let sheep_sprite_material = sprite_material.add(ExtendedMaterial {
+        base: StandardMaterial {
+            base_color_texture: Some(sheep_texture.clone()),
+            alpha_mode: AlphaMode::Opaque,
+            ..default()
+        },
+        extension: SpriteExtension {
+            base_teture: Some(sheep_texture.clone()),
+        },
     });
 
     //spawn sheeps
@@ -124,9 +136,9 @@ pub fn setup(
         }
 
         commands.spawn((
-            PbrBundle {
+            MaterialMeshBundle {
                 mesh: square.clone(),
-                material: sheep_material.clone(),
+                material: sheep_sprite_material.clone(),
                 transform: Transform::from_xyz(pos.x, pos.y + 3.0, pos.z)
                     .with_rotation(Quat::from_euler(
                         EulerRot::XYZ,

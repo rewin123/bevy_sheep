@@ -1,13 +1,14 @@
 #![allow(clippy::type_complexity)]
 
+pub mod common_storage;
 pub mod debug_diagnostic;
 pub mod physics;
 pub mod player;
-pub mod sheep;
-pub mod test_level;
 pub mod safe_area;
+pub mod sheep;
+pub mod sprite_material;
+pub mod test_level;
 pub mod torch;
-pub mod common_storage;
 
 use std::f32::consts::PI;
 
@@ -44,10 +45,12 @@ impl Plugin for GamePlugin {
         }
 
         app.add_plugins((
-            player::PlayerPlugin, 
-            physics::PhysicsPlugin, 
-            common_storage::CommonStoragePlugin, 
+            player::PlayerPlugin,
+            physics::PhysicsPlugin,
+            common_storage::CommonStoragePlugin,
             torch::TorchPlugin,
+            safe_area::SafeAreaPlugin,
+            sprite_material::SpriteMaterialPlugin,
         ));
 
         app.add_systems(Startup, (test_level::setup, sheep::setup));
@@ -65,4 +68,3 @@ impl Plugin for GamePlugin {
 pub fn get_sprite_rotation() -> Quat {
     Quat::from_euler(EulerRot::XYZ, PI / 2.0 - PI / 4.0, 0.0, 0.0)
 }
-

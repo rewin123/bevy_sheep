@@ -9,7 +9,6 @@ impl Plugin for DiagnosticPlugin {
             (setup_diagnostic_panel, apply_deferred, setup_counter),
         )
         .add_systems(Update, (fps_counting,))
-        
         .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::default());
     }
 }

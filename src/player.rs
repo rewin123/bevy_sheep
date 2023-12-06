@@ -1,6 +1,10 @@
-use bevy::{input::mouse::MouseWheel, prelude::*, window::PrimaryWindow};
+use bevy::{input::mouse::MouseWheel, pbr::ExtendedMaterial, prelude::*, window::PrimaryWindow};
 
-use crate::{get_sprite_rotation, physics::Velocity};
+use crate::{
+    get_sprite_rotation,
+    physics::Velocity,
+    sprite_material::{SpriteExtension, SpriteMaterial},
+};
 
 const DOG_PATH: &str = "test/dog.png";
 
@@ -72,22 +76,28 @@ fn spawn_player_by_event(
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut sprite_material: ResMut<Assets<SpriteMaterial>>,
 ) {
     for event in event_reader.read() {
         let plane = meshes.add(Mesh::from(shape::Plane {
             size: 1.0,
             ..default()
         }));
-        let material = materials.add(StandardMaterial {
-            base_color_texture: Some(asset_server.load(DOG_PATH)),
-            alpha_mode: AlphaMode::Blend,
-            ..default()
+        let material = sprite_material.add(SpriteMaterial {
+            base: StandardMaterial {
+                base_color_texture: Some(asset_server.load(DOG_PATH)),
+                alpha_mode: AlphaMode::Opaque,
+                ..default()
+            },
+            extension: SpriteExtension {
+                base_teture: Some(asset_server.load(DOG_PATH)),
+            },
         });
 
         info!("Spawn player at {:?}", event.position);
 
         commands.spawn((
-            PbrBundle {
+            MaterialMeshBundle {
                 mesh: plane.clone(),
                 material: material.clone(),
                 transform: Transform::from_translation(event.position + Vec3::new(0.0, 2.5, 0.0))
