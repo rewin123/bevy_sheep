@@ -53,6 +53,9 @@ impl Plugin for GamePlugin {
             sprite_material::SpriteMaterialPlugin,
         ));
 
+        //For long term updates
+        app.insert_resource(Time::<Fixed>::from_seconds(1.0));
+
         app.add_systems(Startup, (test_level::setup, sheep::setup));
         // TODO: Move to plugin
         app.add_systems(

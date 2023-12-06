@@ -52,6 +52,7 @@ pub fn scared_sheeps(
             if sheep.1.translation.distance(bark_origin) <= bark.radius {
                 sheep.3 .0 = true;
                 sheep.2 .0 = sheep.1.translation - bark_origin;
+                sheep.2 .0.y = 0.0; //sheep must not fly and be in fixed height
             }
         }
     }
