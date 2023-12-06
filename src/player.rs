@@ -8,8 +8,8 @@ use crate::{
 
 const DOG_PATH: &str = "test/dog.png";
 
-const DOG_SPEED: f32 = 45.0 * 1000.0 / 3600.0; // Sheepdog accepts 35 km/h in reality (but fastest dog can do 67 km/h o.0)
-const DOG_ACCELERATION: f32 = DOG_SPEED * 4.0;
+pub const DOG_SPEED: f32 = 45.0 * 1000.0 / 3600.0; // Sheepdog accepts 35 km/h in reality (but fastest dog can do 67 km/h o.0)
+pub const DOG_ACCELERATION: f32 = DOG_SPEED * 4.0;
 
 pub struct PlayerPlugin;
 

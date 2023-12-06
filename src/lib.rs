@@ -51,20 +51,14 @@ impl Plugin for GamePlugin {
             torch::TorchPlugin,
             safe_area::SafeAreaPlugin,
             sprite_material::SpriteMaterialPlugin,
+            sheep::SheepPlugin,
         ));
 
         //For long term updates
         app.insert_resource(Time::<Fixed>::from_seconds(1.0));
 
         app.add_systems(Startup, (test_level::setup, sheep::setup));
-        // TODO: Move to plugin
-        app.add_systems(
-            Update,
-            (
-                sheep::scared_sheeps.before(sheep::sheep_state),
-                sheep::update_scared_sheeps,
-            ),
-        );
+        
     }
 }
 
