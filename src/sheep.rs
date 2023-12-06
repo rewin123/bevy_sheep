@@ -120,7 +120,7 @@ impl StateChance {
 pub fn scared_sheeps(
     mut commands: Commands,
     mut event_reader: EventReader<Bark>,
-    mut sheeps: Query<(Entity, &Transform, &mut WalkController), With<Sheep>>,
+    mut sheeps: Query<(Entity, &Transform, &mut WalkController, &mut Decision), With<Sheep>>,
 ) {
     if let Some(bark) = event_reader.read().next() {
         let bark_origin = bark.position;
@@ -130,6 +130,7 @@ pub fn scared_sheeps(
                 sheep.2 .target_velocity = (sheep.1.translation - bark_origin).normalize_or_zero() * SHEEP_SPEED;
                 sheep.2 .target_velocity.y = 0.0; //sheep must not fly and be in fixed height
                 commands.entity(sheep.0).insert(scare);
+                *sheep.3 = Decision::Scared;
             }
         }
     }
@@ -155,7 +156,7 @@ fn init_random_walk(
     let mut rand = rand::thread_rng();
     for ev in event_reader.read() {
         if let Ok(t) = poses.get_component::<Transform>(ev.e) {
-            info!("init random walk for {:?}", ev.e);
+            // info!("init random walk for {:?}", ev.e);
             let r = rand.gen_range(0.0..RANDOM_WALK_RANGE);
             let angle = rand.gen_range(0.0..PI*2.0);
             
@@ -163,7 +164,7 @@ fn init_random_walk(
                 target: t.translation + Vec3::new(angle.cos() * r, 0.0, angle.sin() * r),
             });
         } else {
-            warn!("init random walk for {:?} failed", ev.e);
+            // warn!("init random walk for {:?} failed", ev.e);
         }
     }
     event_reader.clear();
@@ -208,29 +209,29 @@ pub fn sheep_state(
 
             match next_dec {
                 Decision::Idle => {
-                    info!("new idle for {:?}", e);
+                    // info!("new idle for {:?}", e);
                 },
                 Decision::Feed => {
-                    info!("new feed for {:?}", e);
+                    *dec = Decision::Idle;
                 },
                 Decision::RandomWalk => {
-                    info!("new random walk for {:?}", e);
+                    // info!("new random walk for {:?}", e);
                     init_random_walk.send(InitRandomWalk { e });
                 },
                 Decision::MoveToSafeZone => {
-                    info!("new move to safe zone for {:?}", e);
+                    *dec = Decision::Idle;
                 },
                 Decision::MoveOutSafeZone => {
-                    info!("new move out safe zone for {:?}", e);
+                    *dec = Decision::Idle;
                 },
                 Decision::IdleFeeding => {
-                    info!("new idle feeding for {:?}", e);
+                    // info!("new idle feeding for {:?}", e);
                     commands.entity(e).insert(IdleFeeding {
                         time: rand.gen_range(0.0..IDLE_FEEDING_TIME_RANGE) + IDLE_FEEDING_TIME,
                     });
                 },
                 Decision::Scared => {
-
+                    *dec = Decision::Idle;
                 },
             }
         }
