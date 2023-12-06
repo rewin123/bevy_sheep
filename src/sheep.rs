@@ -1,9 +1,20 @@
 use std::f32::consts::PI;
 
-use bevy::{pbr::ExtendedMaterial, prelude::*, gltf::GltfMesh, render::{render_resource::PrimitiveTopology, mesh::Indices}};
+use bevy::{
+    gltf::GltfMesh,
+    pbr::ExtendedMaterial,
+    prelude::*,
+    render::{mesh::Indices, render_resource::PrimitiveTopology},
+};
 use rand::Rng;
 
-use crate::{physics::Velocity, player::Bark, sprite_material::{SpriteExtension, create_plane_mesh}, get_sprite_rotation, test_level::TEST_LEVEL_SIZE};
+use crate::{
+    get_sprite_rotation,
+    physics::Velocity,
+    player::Bark,
+    sprite_material::{create_plane_mesh, SpriteExtension},
+    test_level::TEST_LEVEL_SIZE,
+};
 
 const SHEEP_PATH: &str = "test/sheep.png";
 
@@ -77,7 +88,7 @@ pub fn update_scared_sheeps(
     time: Res<Time>,
     mut sheeps: Query<(&Sheep, &mut Velocity, &mut Decision, &mut IsScared)>,
 ) {
-    for mut sheep in sheeps.iter_mut().filter(|q| q.3.0) {
+    for mut sheep in sheeps.iter_mut().filter(|q| q.3 .0) {
         if sheep.3 .1 > 2. {
             *sheep.2 = Decision::Idle;
             *sheep.1 = Velocity::default();
@@ -88,8 +99,6 @@ pub fn update_scared_sheeps(
     }
 }
 
-
-
 pub fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -97,9 +106,7 @@ pub fn setup(
     asset_server: Res<AssetServer>,
     mut sprite_material: ResMut<Assets<ExtendedMaterial<StandardMaterial, SpriteExtension>>>,
 ) {
-    let square = meshes.add(
-        create_plane_mesh()
-    );
+    let square = meshes.add(create_plane_mesh());
     let sheep_texture: Handle<Image> = asset_server.load(SHEEP_PATH);
 
     let _sheep_material = materials.add(StandardMaterial {

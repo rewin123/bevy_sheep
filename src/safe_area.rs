@@ -33,7 +33,11 @@ impl SafeArea {
 
                 dx.abs() < size.x / 2.0 && dy.abs() < size.y / 2.0
             }
-            SafeArea::Ellipse { pos1, pos2, radius: _ } => {
+            SafeArea::Ellipse {
+                pos1,
+                pos2,
+                radius: _,
+            } => {
                 let d = (*pos1 - *pos2).length();
                 let r = (*pos1 - sheep_pos).length();
                 r * r <= d * d
@@ -44,9 +48,11 @@ impl SafeArea {
     pub fn get_center(&self) -> Vec3 {
         match self {
             SafeArea::Rect { pos, size: _ } => Vec3::new(pos.x, 0.0, pos.y),
-            SafeArea::Ellipse { pos1, pos2, radius: _ } => {
-                Vec3::new((pos1.x + pos2.x) / 2.0, 0.0, (pos1.y + pos2.y) / 2.0)
-            }
+            SafeArea::Ellipse {
+                pos1,
+                pos2,
+                radius: _,
+            } => Vec3::new((pos1.x + pos2.x) / 2.0, 0.0, (pos1.y + pos2.y) / 2.0),
         }
     }
 }
@@ -62,7 +68,11 @@ fn draw_safe_area(mut gizmos: Gizmos, query: Query<&SafeArea>) {
                     Color::ORANGE,
                 );
             }
-            SafeArea::Ellipse { pos1: _, pos2: _, radius: _ } => {}
+            SafeArea::Ellipse {
+                pos1: _,
+                pos2: _,
+                radius: _,
+            } => {}
         }
     }
 }

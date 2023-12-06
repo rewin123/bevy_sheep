@@ -3,7 +3,7 @@ use bevy::{input::mouse::MouseWheel, prelude::*, window::PrimaryWindow};
 use crate::{
     get_sprite_rotation,
     physics::Velocity,
-    sprite_material::{SpriteExtension, SpriteMaterial, create_plane_mesh},
+    sprite_material::{create_plane_mesh, SpriteExtension, SpriteMaterial},
 };
 
 const DOG_PATH: &str = "test/dog.png";
