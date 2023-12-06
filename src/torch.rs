@@ -77,13 +77,13 @@ fn spawn_torch(
                 parent.spawn(PointLightBundle {
                     point_light: PointLight {
                         color: Color::ORANGE,
-                        intensity: 10000.0,
+                        intensity: 100.0,
                         range: 5.0,
-                        radius: 5.0,
+                        radius: 0.3,
                         shadows_enabled: false,
                         ..default()
                     },
-                    transform: Transform::from_translation(Vec3::new(0.0, 2.0, -0.4)),
+                    transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
                     ..default()
                 });
             });
