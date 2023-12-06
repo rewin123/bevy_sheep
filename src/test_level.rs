@@ -8,6 +8,11 @@ const TREE_PATH: &str = "test/pine.png";
 
 pub const TEST_LEVEL_SIZE: f32 = 20.0;
 
+pub const DAY_SUN_COLOR: &str = "f2ecbe";
+pub const EVENING_SUN_COLOR: &str = "cfaf56";
+pub const DUSK_SUN_COLOR: &str = "f2ecbe";
+pub const NIGHT_SUN_COLOR: &str = "f2ecbe";
+
 pub fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -37,7 +42,7 @@ pub fn setup(
         transform: Transform::from_xyz(30.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
         directional_light: DirectionalLight {
             shadows_enabled: true,
-            color: Color::WHITE,
+            color: Color::hex(DAY_SUN_COLOR).unwrap(),
             illuminance: 50000.0,
             ..default()
         },
@@ -103,7 +108,7 @@ pub fn setup(
             ..default()
         })),
         material: materials.add(StandardMaterial {
-            base_color: Color::rgb(0.0, 0.5, 0.0),
+            base_color: Color::hex("5d9669").unwrap(),
             ..default()
         }),
         transform: Transform::from_xyz(0.0, 0.0, 0.0),

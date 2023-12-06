@@ -109,7 +109,7 @@ pub fn setup(
     });
 
     //spawn sheeps
-    let r = TEST_LEVEL_SIZE / 2.0;
+    let r = TEST_LEVEL_SIZE / 1.5;
     let mut rng = rand::thread_rng();
     let sheep_count = 100;
 
@@ -129,7 +129,7 @@ pub fn setup(
                 material: sheep_material.clone(),
                 transform: Transform::from_xyz(pos.x, pos.y, pos.z)
                     .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::splat(1.0)),
+                    .with_scale(Vec3::new(13.0 / 10.0, 1.0, 1.0)),
                 ..default()
             },
             Sheep,

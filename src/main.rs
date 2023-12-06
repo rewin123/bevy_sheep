@@ -29,7 +29,9 @@ fn main() {
                 ..default()
             }),
             ..default()
-        }))
+        }).set(
+            ImagePlugin::default_nearest(),
+        ))
         .insert_resource(DirectionalLightShadowMap { size: 4096 })
         .add_plugins(GamePlugin)
         .add_systems(Startup, set_window_icon)

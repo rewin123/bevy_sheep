@@ -102,7 +102,7 @@ fn spawn_player_by_event(
                 material: material.clone(),
                 transform: Transform::from_translation(event.position)
                     .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::splat(1.0)),
+                    .with_scale(Vec3::new(12.0 / 8.0, 1.0, 1.0)),
                 ..default()
             },
             Player,
