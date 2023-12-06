@@ -210,7 +210,7 @@ fn player_movemnt_by_wasd(
 
     let dspeed = target_speed - player.0;
 
-    let accel = accel.min(dspeed.length() * 1000.0);
+    let accel = accel.min(dspeed.length() * 100.0);
 
     player.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
 

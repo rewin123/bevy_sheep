@@ -78,8 +78,8 @@ fn spawn_torch(
                     point_light: PointLight {
                         color: Color::ORANGE,
                         intensity: 10000.0,
-                        range: 300.0,
-                        radius: 100.0,
+                        range: 5.0,
+                        radius: 5.0,
                         shadows_enabled: false,
                         ..default()
                     },

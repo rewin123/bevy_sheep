@@ -109,7 +109,7 @@ pub fn setup(
     });
 
     //spawn sheeps
-    let r = TEST_LEVEL_SIZE;
+    let r = TEST_LEVEL_SIZE / 2.0;
     let mut rng = rand::thread_rng();
     let sheep_count = 100;
 

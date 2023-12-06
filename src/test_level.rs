@@ -6,7 +6,7 @@ use crate::{player::SpawnPlayer, safe_area::SafeArea, torch::SpawnTorch, sprite_
 
 const TREE_PATH: &str = "test/pine.png";
 
-pub const TEST_LEVEL_SIZE: f32 = 30.0;
+pub const TEST_LEVEL_SIZE: f32 = 20.0;
 
 pub fn setup(
     mut commands: Commands,
@@ -69,7 +69,7 @@ pub fn setup(
     });
 
     let tree_r = r * 2.0;
-    let cut_r = r + 10.0;
+    let cut_r = r + 5.0;
 
     let tree_area_size = PI * tree_r * tree_r - PI * cut_r * cut_r;
     let tree_per_meter = 1.0;
@@ -114,7 +114,7 @@ pub fn setup(
         position: Vec3::new(-r - 2.0, 0.0, 0.0),
     });
 
-    let num_of_torchs = 4;
+    let num_of_torchs = 10;
 
     for _ in 0..num_of_torchs {
         let pos = Vec3::new(rng.gen_range(-r..r), 0.0, rng.gen_range(-r..r));
@@ -124,6 +124,6 @@ pub fn setup(
 
     commands.spawn(SafeArea::Rect {
         pos: Vec2::ZERO,
-        size: Vec2::new(r, r),
+        size: Vec2::new(r * 1.5, r * 1.5),
     });
 }
