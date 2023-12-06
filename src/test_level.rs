@@ -1,10 +1,12 @@
-use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
+use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*, core_pipeline::clear_color::ClearColorConfig};
 use rand::prelude::*;
 use std::f32::consts::PI;
 
 use crate::{player::SpawnPlayer, safe_area::SafeArea, torch::SpawnTorch, sprite_material::create_plane_mesh, get_sprite_rotation};
 
 const TREE_PATH: &str = "test/pine.png";
+
+pub const TEST_LEVEL_SIZE: f32 = 30.0;
 
 pub fn setup(
     mut commands: Commands,
@@ -20,22 +22,13 @@ pub fn setup(
             hdr: true,
             ..default()
         },
+        camera_3d : Camera3d {
+            clear_color: ClearColorConfig::Custom(Color::BLACK),
+            ..default()
+        },
         ..default()
     });
 
-    //green plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane {
-            size: 300.0,
-            ..default()
-        })),
-        material: materials.add(StandardMaterial {
-            base_color: Color::rgb(0.0, 0.5, 0.0),
-            ..default()
-        }),
-        transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        ..default()
-    });
 
     //spawn sun
     let mut cascades = CascadeShadowConfigBuilder::default();
@@ -63,7 +56,7 @@ pub fn setup(
     );
     let tree_texture: Handle<Image> = asset_server.load(TREE_PATH);
 
-    let r = 10.0;
+    let r = TEST_LEVEL_SIZE;
     let mut rng = rand::thread_rng();
 
     //spawn trees
@@ -75,8 +68,12 @@ pub fn setup(
         ..default()
     });
 
-    let tree_r = 50.0;
+    let tree_r = r * 2.0;
     let cut_r = r + 10.0;
+
+    let tree_area_size = PI * tree_r * tree_r - PI * cut_r * cut_r;
+    let tree_per_meter = 1.0;
+    let tree_count = (tree_area_size * tree_per_meter) as usize;
 
     for _ in 0..tree_count {
         let x = rng.gen_range(-tree_r..tree_r);
@@ -97,6 +94,21 @@ pub fn setup(
             ..default()
         });
     }
+
+    
+    //green plane
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Plane {
+            size: tree_r * 2.0,
+            ..default()
+        })),
+        material: materials.add(StandardMaterial {
+            base_color: Color::rgb(0.0, 0.5, 0.0),
+            ..default()
+        }),
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        ..default()
+    });
 
     spawn_player_event.send(SpawnPlayer {
         position: Vec3::new(-r - 2.0, 0.0, 0.0),

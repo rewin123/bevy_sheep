@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::{pbr::ExtendedMaterial, prelude::*, gltf::GltfMesh, render::{render_resource::PrimitiveTopology, mesh::Indices}};
 use rand::Rng;
 
-use crate::{physics::Velocity, player::Bark, sprite_material::{SpriteExtension, create_plane_mesh}, get_sprite_rotation};
+use crate::{physics::Velocity, player::Bark, sprite_material::{SpriteExtension, create_plane_mesh}, get_sprite_rotation, test_level::TEST_LEVEL_SIZE};
 
 const SHEEP_PATH: &str = "test/sheep.png";
 
@@ -109,9 +109,9 @@ pub fn setup(
     });
 
     //spawn sheeps
-    let r = 10.0;
+    let r = TEST_LEVEL_SIZE;
     let mut rng = rand::thread_rng();
-    let sheep_count = 10;
+    let sheep_count = 100;
 
     for _ in 0..sheep_count {
         let x = rng.gen_range(-r..r);
