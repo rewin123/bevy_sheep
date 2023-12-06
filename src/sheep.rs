@@ -1,9 +1,9 @@
 use std::f32::consts::PI;
 
-use bevy::{pbr::ExtendedMaterial, prelude::*};
+use bevy::{pbr::ExtendedMaterial, prelude::*, gltf::GltfMesh, render::{render_resource::PrimitiveTopology, mesh::Indices}};
 use rand::Rng;
 
-use crate::{physics::Velocity, player::Bark, sprite_material::SpriteExtension};
+use crate::{physics::Velocity, player::Bark, sprite_material::{SpriteExtension, create_plane_mesh}, get_sprite_rotation};
 
 const SHEEP_PATH: &str = "test/sheep.png";
 
@@ -88,6 +88,8 @@ pub fn update_scared_sheeps(
     }
 }
 
+
+
 pub fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -96,11 +98,7 @@ pub fn setup(
     mut sprite_material: ResMut<Assets<ExtendedMaterial<StandardMaterial, SpriteExtension>>>,
 ) {
     let square = meshes.add(
-        shape::Plane {
-            size: 1.0,
-            ..default()
-        }
-        .into(),
+        create_plane_mesh()
     );
     let sheep_texture: Handle<Image> = asset_server.load(SHEEP_PATH);
 
@@ -110,19 +108,8 @@ pub fn setup(
         ..default()
     });
 
-    let sheep_sprite_material = sprite_material.add(ExtendedMaterial {
-        base: StandardMaterial {
-            base_color_texture: Some(sheep_texture.clone()),
-            alpha_mode: AlphaMode::Opaque,
-            ..default()
-        },
-        extension: SpriteExtension {
-            base_teture: Some(sheep_texture.clone()),
-        },
-    });
-
     //spawn sheeps
-    let r = 50.0;
+    let r = 10.0;
     let mut rng = rand::thread_rng();
     let sheep_count = 10;
 
@@ -137,17 +124,12 @@ pub fn setup(
         }
 
         commands.spawn((
-            MaterialMeshBundle {
+            PbrBundle {
                 mesh: square.clone(),
-                material: sheep_sprite_material.clone(),
-                transform: Transform::from_xyz(pos.x, pos.y + 3.0, pos.z)
-                    .with_rotation(Quat::from_euler(
-                        EulerRot::XYZ,
-                        PI / 2.0 - PI / 4.0,
-                        0.0,
-                        0.0,
-                    ))
-                    .with_scale(Vec3::splat(10.0)),
+                material: sheep_material.clone(),
+                transform: Transform::from_xyz(pos.x, pos.y, pos.z)
+                    .with_rotation(get_sprite_rotation())
+                    .with_scale(Vec3::splat(1.0)),
                 ..default()
             },
             Sheep,

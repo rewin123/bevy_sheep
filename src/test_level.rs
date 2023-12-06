@@ -2,7 +2,7 @@ use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
 use rand::prelude::*;
 use std::f32::consts::PI;
 
-use crate::{player::SpawnPlayer, safe_area::SafeArea, torch::SpawnTorch};
+use crate::{player::SpawnPlayer, safe_area::SafeArea, torch::SpawnTorch, sprite_material::create_plane_mesh, get_sprite_rotation};
 
 const TREE_PATH: &str = "test/pine.png";
 
@@ -15,7 +15,7 @@ pub fn setup(
     mut spawn_torch: EventWriter<SpawnTorch>,
 ) {
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 100.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
         camera: Camera {
             hdr: true,
             ..default()
@@ -26,7 +26,7 @@ pub fn setup(
     //green plane
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane {
-            size: 1000.0,
+            size: 300.0,
             ..default()
         })),
         material: materials.add(StandardMaterial {
@@ -39,9 +39,9 @@ pub fn setup(
 
     //spawn sun
     let mut cascades = CascadeShadowConfigBuilder::default();
-    cascades.maximum_distance = 250.0;
+    cascades.maximum_distance = 100.0;
     commands.spawn(DirectionalLightBundle {
-        transform: Transform::from_xyz(100.0, 100.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(30.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
         directional_light: DirectionalLight {
             shadows_enabled: true,
             color: Color::WHITE,
@@ -59,16 +59,11 @@ pub fn setup(
         brightness: 1.0,
     });
 
-    let square = meshes.add(
-        shape::Plane {
-            size: 1.0,
-            ..default()
-        }
-        .into(),
+    let square = meshes.add(create_plane_mesh()
     );
     let tree_texture: Handle<Image> = asset_server.load(TREE_PATH);
 
-    let r = 50.0;
+    let r = 10.0;
     let mut rng = rand::thread_rng();
 
     //spawn trees
@@ -80,8 +75,8 @@ pub fn setup(
         ..default()
     });
 
-    let tree_r = 150.0;
-    let cut_r = r + 20.0;
+    let tree_r = 50.0;
+    let cut_r = r + 10.0;
 
     for _ in 0..tree_count {
         let x = rng.gen_range(-tree_r..tree_r);
@@ -96,20 +91,15 @@ pub fn setup(
         commands.spawn(PbrBundle {
             mesh: square.clone(),
             material: tree_material.clone(),
-            transform: Transform::from_xyz(pos.x, pos.y + 8.0, pos.z)
-                .with_rotation(Quat::from_euler(
-                    EulerRot::XYZ,
-                    PI / 2.0 - PI / 4.0,
-                    0.0,
-                    0.0,
-                ))
-                .with_scale(Vec3::new(10.0, 10.0, 20.0)),
+            transform: Transform::from_xyz(pos.x, pos.y, pos.z)
+                .with_rotation(get_sprite_rotation())
+                .with_scale(Vec3::new(2.5, 2.6, 5.0)),
             ..default()
         });
     }
 
     spawn_player_event.send(SpawnPlayer {
-        position: Vec3::new(-r - 10.0, 0.0, 0.0),
+        position: Vec3::new(-r - 2.0, 0.0, 0.0),
     });
 
     let num_of_torchs = 4;

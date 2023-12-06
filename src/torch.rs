@@ -64,10 +64,10 @@ fn spawn_torch(
                 torch,
                 PbrBundle {
                     transform: Transform::from_translation(
-                        event.position + Vec3::new(0.0, 2.5, 0.0),
+                        event.position,
                     )
                     .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::new(1.0, 1.0, 7.0)),
+                    .with_scale(Vec3::new(2.0 / 7.0, 2.0 / 7.0, 2.0)),
                     material: torch_material.0.clone(),
                     mesh: common_storage.plane.clone(),
                     ..default()

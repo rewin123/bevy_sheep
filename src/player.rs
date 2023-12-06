@@ -3,7 +3,7 @@ use bevy::{input::mouse::MouseWheel, pbr::ExtendedMaterial, prelude::*, window::
 use crate::{
     get_sprite_rotation,
     physics::Velocity,
-    sprite_material::{SpriteExtension, SpriteMaterial},
+    sprite_material::{SpriteExtension, SpriteMaterial, create_plane_mesh},
 };
 
 const DOG_PATH: &str = "test/dog.png";
@@ -79,10 +79,7 @@ fn spawn_player_by_event(
     mut sprite_material: ResMut<Assets<SpriteMaterial>>,
 ) {
     for event in event_reader.read() {
-        let plane = meshes.add(Mesh::from(shape::Plane {
-            size: 1.0,
-            ..default()
-        }));
+        let plane = meshes.add(create_plane_mesh());
         let material = sprite_material.add(SpriteMaterial {
             base: StandardMaterial {
                 base_color_texture: Some(asset_server.load(DOG_PATH)),
@@ -100,9 +97,9 @@ fn spawn_player_by_event(
             MaterialMeshBundle {
                 mesh: plane.clone(),
                 material: material.clone(),
-                transform: Transform::from_translation(event.position + Vec3::new(0.0, 2.5, 0.0))
+                transform: Transform::from_translation(event.position)
                     .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::splat(5.0)),
+                    .with_scale(Vec3::splat(1.0)),
                 ..default()
             },
             Player,
@@ -142,8 +139,8 @@ fn player_movemnt_by_mouse(
 
     let globel_cursor = ray.get_point(distance);
 
-    let speed: f32 = 25.0;
-    let accel: f32 = 200.0;
+    let speed: f32 = 25.0 / 3.0;
+    let accel: f32 = 200.0 / 3.0;
 
     let dir = (globel_cursor - transform.translation).normalize_or_zero();
 

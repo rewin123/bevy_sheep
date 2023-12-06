@@ -3,8 +3,42 @@
 use bevy::{
     pbr::{ExtendedMaterial, MaterialExtension},
     prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef},
+    render::{render_resource::{AsBindGroup, ShaderRef, PrimitiveTopology}, mesh::Indices},
 };
+
+
+pub fn create_plane_mesh() -> Mesh {
+    Mesh::new(PrimitiveTopology::TriangleList)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, 
+    vec![
+        [-0.5, 0.0, 0.0],
+        [0.5, 0.0, 0.0],
+        [-0.5, 0.0, 1.0],
+        [0.5, 0.0, 1.0],
+    ])
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, 
+        vec![
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [0.0, 0.0],
+            [1.0, 0.0],
+        ]
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, 
+        vec![
+            [0.0, -1.0, 0.0],
+            [0.0, -1.0, 0.0],
+            [0.0, -1.0, 0.0],
+            [0.0, -1.0, 0.0],
+        ]
+    )
+    .with_indices(Some(
+        Indices::U32(vec![
+            0, 1, 2,
+            2, 1, 3
+        ])
+    ))
+}
 
 pub type SpriteMaterial = ExtendedMaterial<StandardMaterial, SpriteExtension>;
 

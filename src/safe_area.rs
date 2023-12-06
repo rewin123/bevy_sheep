@@ -59,7 +59,7 @@ fn draw_safe_area(mut gizmos: Gizmos, query: Query<&SafeArea>) {
                     Vec3::new(pos.x, 0.001, pos.y),
                     Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0),
                     *size,
-                    Color::GREEN,
+                    Color::ORANGE,
                 );
             }
             SafeArea::Ellipse { pos1, pos2, radius } => {}

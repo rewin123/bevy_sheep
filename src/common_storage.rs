@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::sprite_material::create_plane_mesh;
+
 #[derive(Resource)]
 pub struct CommonStorage {
     pub plane: Handle<Mesh>,
@@ -15,10 +17,7 @@ impl Plugin for CommonStoragePlugin {
 
 pub fn init_common_storage(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     let storage = CommonStorage {
-        plane: meshes.add(Mesh::from(shape::Plane {
-            size: 1.0,
-            ..default()
-        })),
+        plane: meshes.add(create_plane_mesh()),
     };
 
     commands.insert_resource(storage);

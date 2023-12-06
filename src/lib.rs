@@ -69,5 +69,5 @@ impl Plugin for GamePlugin {
 }
 
 pub fn get_sprite_rotation() -> Quat {
-    Quat::from_euler(EulerRot::XYZ, PI / 2.0 - PI / 4.0, 0.0, 0.0)
+    Quat::from_euler(EulerRot::XYZ, -PI / 2.0 - PI / 4.0, 0.0, 0.0)
 }
