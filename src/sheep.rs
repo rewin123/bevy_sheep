@@ -129,8 +129,12 @@ pub fn scared_sheeps(
                 let scare = IsScared::default();
                 sheep.2 .target_velocity = (sheep.1.translation - bark_origin).normalize_or_zero() * SHEEP_SPEED;
                 sheep.2 .target_velocity.y = 0.0; //sheep must not fly and be in fixed height
-                commands.entity(sheep.0).insert(scare);
+                commands.entity(sheep.0).insert(scare)
+                    .remove::<RandomWalk>()
+                    .remove::<IdleFeeding>();
                 *sheep.3 = Decision::Scared;
+
+
             }
         }
     }
