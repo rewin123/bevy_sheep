@@ -104,12 +104,12 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
-    mut sprite_material: ResMut<Assets<ExtendedMaterial<StandardMaterial, SpriteExtension>>>,
+    // mut _sprite_material: ResMut<Assets<ExtendedMaterial<StandardMaterial, SpriteExtension>>>,
 ) {
     let square = meshes.add(create_plane_mesh());
     let sheep_texture: Handle<Image> = asset_server.load(SHEEP_PATH);
 
-    let _sheep_material = materials.add(StandardMaterial {
+    let sheep_material = materials.add(StandardMaterial {
         base_color_texture: Some(sheep_texture.clone()),
         alpha_mode: AlphaMode::Blend,
         ..default()
