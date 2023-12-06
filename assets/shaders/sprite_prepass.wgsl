@@ -82,7 +82,7 @@ fn fragment(
     out.motion_vector = pbr_prepass_functions::calculate_motion_vector(in.world_position, in.previous_world_position);
 #endif
 
-    if textureSample(base_teture, base_teture_sampler, in.uv).a < 0.5 { discard; };
+    if textureSample(base_teture, base_teture_sampler, in.uv).a != 1.0 { discard; };
 
     return out;
 }

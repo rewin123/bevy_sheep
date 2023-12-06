@@ -238,7 +238,7 @@ fn camera_movement(
             distance.0 /= 1.1;
         }
 
-        distance.0 = distance.0.clamp(10.0, 300.0);
+        distance.0 = distance.0.clamp(10.0, 150.0);
     }
 
     let cam_frw = camera.forward();

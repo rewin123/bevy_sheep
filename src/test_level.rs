@@ -16,7 +16,7 @@ pub fn setup(
 ) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 100.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
-        camera : Camera {
+        camera: Camera {
             hdr: true,
             ..default()
         },
@@ -38,7 +38,8 @@ pub fn setup(
     });
 
     //spawn sun
-    let cascades = CascadeShadowConfigBuilder::default();
+    let mut cascades = CascadeShadowConfigBuilder::default();
+    cascades.maximum_distance = 250.0;
     commands.spawn(DirectionalLightBundle {
         transform: Transform::from_xyz(100.0, 100.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
         directional_light: DirectionalLight {
