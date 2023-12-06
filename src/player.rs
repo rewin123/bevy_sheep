@@ -8,6 +8,9 @@ use crate::{
 
 const DOG_PATH: &str = "test/dog.png";
 
+const DOG_SPEED: f32 = 45.0 * 1000.0 / 3600.0; // Sheepdog accepts 35 km/h in reality (but fastest dog can do 67 km/h o.0)
+const DOG_ACCELERATION: f32 = DOG_SPEED * 4.0;
+
 pub struct PlayerPlugin;
 
 #[derive(Default, Hash, PartialEq, Eq, Debug, States, Clone)]
@@ -139,8 +142,8 @@ fn player_movemnt_by_mouse(
 
     let globel_cursor = ray.get_point(distance);
 
-    let speed: f32 = 25.0 / 3.0;
-    let accel: f32 = 200.0 / 3.0;
+    let speed: f32 = DOG_SPEED;
+    let accel: f32 = DOG_ACCELERATION;
 
     let dir = (globel_cursor - transform.translation).normalize_or_zero();
 
@@ -165,7 +168,7 @@ pub fn bark(
 
     if input.pressed(KeyCode::Space) {
         event_writer.send(Bark {
-            radius: 15.,
+            radius: 5.,
             position: bark.translation,
         });
     }
@@ -180,8 +183,8 @@ fn player_movemnt_by_wasd(
         return;
     };
 
-    let speed = 25.0;
-    let accel = 200.0_f32;
+    let speed = DOG_SPEED;
+    let accel = DOG_ACCELERATION;
 
     let mut dir = Vec3::ZERO;
 
@@ -207,7 +210,7 @@ fn player_movemnt_by_wasd(
 
     let dspeed = target_speed - player.0;
 
-    let accel = accel.min(dspeed.length() * 10.0);
+    let accel = accel.min(dspeed.length() * 1000.0);
 
     player.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
 
