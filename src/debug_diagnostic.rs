@@ -2,6 +2,8 @@ use bevy::prelude::*;
 
 use crate::safe_area::SheepCounter;
 
+const FONT_SIZE: f32 = 24.0;
+
 pub struct DiagnosticPlugin;
 
 impl Plugin for DiagnosticPlugin {
@@ -26,7 +28,7 @@ pub fn setup_diagnostic_panel(mut commands: Commands) {
         style: Style {
             top: Val::Px(0.0),
             left: Val::Px(0.0),
-            width: Val::Px(100.0),
+            width: Val::Px(200.0),
             position_type: PositionType::Absolute,
             flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Center,
@@ -45,8 +47,11 @@ pub fn setup_diagnostic_panel(mut commands: Commands) {
 pub struct FrameCounter;
 
 pub fn setup_counter(mut commands: Commands, panels: Query<Entity, With<DiagnosticPanel>>) {
+    let mut text_style = TextStyle::default();
+    text_style.font_size = FONT_SIZE;
+
     let frame_counter = commands
-        .spawn(TextBundle::from_section("FPS: ", TextStyle::default()))
+        .spawn(TextBundle::from_section("FPS: ", text_style))
         .insert(FrameCounter)
         .id();
 
@@ -68,8 +73,10 @@ pub fn setup_sheep_counter(
     mut commands: Commands,
     panels: Query<Entity, With<DiagnosticPanel>>,
 ) {
+    let mut text_style = TextStyle::default();
+    text_style.font_size = FONT_SIZE;
     let sheep_counter = commands
-        .spawn(TextBundle::from_section("Sheep in safe area: ", TextStyle::default()))
+        .spawn(TextBundle::from_section("Sheep in safe area: ", text_style))
         .insert(ShipDebugCounter)
         .id();
 
