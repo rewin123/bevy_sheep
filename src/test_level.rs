@@ -1,8 +1,13 @@
-use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*, core_pipeline::clear_color::ClearColorConfig};
+use bevy::{
+    core_pipeline::clear_color::ClearColorConfig, pbr::CascadeShadowConfigBuilder, prelude::*,
+};
 use rand::prelude::*;
 use std::f32::consts::PI;
 
-use crate::{player::SpawnPlayer, safe_area::SafeArea, torch::SpawnTorch, sprite_material::create_plane_mesh, get_sprite_rotation};
+use crate::{
+    get_sprite_rotation, player::SpawnPlayer, safe_area::SafeArea,
+    sprite_material::create_plane_mesh, torch::SpawnTorch,
+};
 
 const TREE_PATH: &str = "test/pine.png";
 
@@ -27,13 +32,12 @@ pub fn setup(
             hdr: true,
             ..default()
         },
-        camera_3d : Camera3d {
+        camera_3d: Camera3d {
             clear_color: ClearColorConfig::Custom(Color::BLACK),
             ..default()
         },
         ..default()
     });
-
 
     //spawn sun
     let mut cascades = CascadeShadowConfigBuilder::default();
@@ -57,8 +61,7 @@ pub fn setup(
         brightness: 1.0,
     });
 
-    let square = meshes.add(create_plane_mesh()
-    );
+    let square = meshes.add(create_plane_mesh());
     let tree_texture: Handle<Image> = asset_server.load(TREE_PATH);
 
     let r = TEST_LEVEL_SIZE;
@@ -100,7 +103,6 @@ pub fn setup(
         });
     }
 
-    
     //green plane
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane {

@@ -1,9 +1,9 @@
-use bevy::{input::mouse::MouseWheel, pbr::ExtendedMaterial, prelude::*, window::PrimaryWindow};
+use bevy::{input::mouse::MouseWheel, prelude::*, window::PrimaryWindow};
 
 use crate::{
     get_sprite_rotation,
     physics::Velocity,
-    sprite_material::{SpriteExtension, SpriteMaterial, create_plane_mesh},
+    sprite_material::{create_plane_mesh, SpriteExtension, SpriteMaterial},
 };
 
 const DOG_PATH: &str = "test/dog.png";
@@ -78,7 +78,7 @@ fn spawn_player_by_event(
     mut event_reader: EventReader<SpawnPlayer>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    _materials: ResMut<Assets<StandardMaterial>>,
     mut sprite_material: ResMut<Assets<SpriteMaterial>>,
 ) {
     for event in event_reader.read() {
