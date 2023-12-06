@@ -77,7 +77,7 @@ pub fn update_scared_sheeps(
     time: Res<Time>,
     mut sheeps: Query<(&Sheep, &mut Velocity, &mut Decision, &mut IsScared)>,
 ) {
-    for mut sheep in sheeps.iter_mut().filter(|q| q.3 .0) {
+    for mut sheep in sheeps.iter_mut().filter(|q| q.3.0) {
         if sheep.3 .1 > 2. {
             *sheep.2 = Decision::Idle;
             *sheep.1 = Velocity::default();
@@ -104,7 +104,7 @@ pub fn setup(
     );
     let sheep_texture: Handle<Image> = asset_server.load(SHEEP_PATH);
 
-    let sheep_material = materials.add(StandardMaterial {
+    let _sheep_material = materials.add(StandardMaterial {
         base_color_texture: Some(sheep_texture.clone()),
         alpha_mode: AlphaMode::Blend,
         ..default()

@@ -18,8 +18,9 @@ impl Plugin for DiagnosticPlugin {
             )
                 .chain(),
         )
-        .add_systems(Update, (fps_counting, sheep_counter_text))
-        .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::default());
+        .add_systems(Update, (fps_counting, sheep_counter_text));
+        # [cfg(feature = "dev")]
+        app.add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::default());
     }
 }
 
