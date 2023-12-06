@@ -18,11 +18,12 @@ use crate::{
 
 const SHEEP_PATH: &str = "test/sheep.png";
 
-const SHEEP_SPEED : f32 = DOG_SPEED * 0.3;
+const SHEEP_SPEED : f32 = DOG_SPEED * 0.5;
 const SHEEP_ACCELERATION : f32 = SHEEP_SPEED * 3.0;
 
 const RANDOM_WALK_RANGE : f32 = 5.0;
 const RANDOM_WALK_ACCEPT_RADIUS : f32 = 0.5;
+const RANDOM_WALK_SPEED_MULTIPLIER : f32 = 0.2;
 
 const IDLE_FEEDING_TIME : f32 = 1.0;
 const IDLE_FEEDING_TIME_RANGE : f32 = 0.5;
@@ -178,7 +179,7 @@ fn random_walk_system(
             commands.entity(e).remove::<RandomWalk>();
             *dec = Decision::Idle;
         } else {
-            v.target_velocity = (rw.target - t.translation).normalize() * SHEEP_SPEED;
+            v.target_velocity = (rw.target - t.translation).normalize() * SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER;
         }
     }
 }
