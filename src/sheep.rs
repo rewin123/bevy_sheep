@@ -21,12 +21,12 @@ use bevy_spatial::{
 
 const SHEEP_PATH: &str = "test/sheep.png";
 
-const SHEEP_SPEED: f32 = DOG_SPEED * 0.5;
+pub const SHEEP_SPEED: f32 = DOG_SPEED * 0.5;
 const SHEEP_ACCELERATION: f32 = SHEEP_SPEED * 3.0;
 
 const RANDOM_WALK_RANGE: f32 = 5.0;
 const RANDOM_WALK_ACCEPT_RADIUS: f32 = 0.5;
-const RANDOM_WALK_SPEED_MULTIPLIER: f32 = 0.2;
+pub const RANDOM_WALK_SPEED_MULTIPLIER: f32 = 0.2;
 
 //IDLE FEEDING must be large enough so that player can see sheep and react for escapes
 const IDLE_FEEDING_TIME: f32 = 5.0;
@@ -49,7 +49,9 @@ impl Plugin for SheepPlugin {
 
         //random walk
         app.add_event::<InitRandomWalk>()
-            .add_systems(Update, (init_random_walk, goto_system));
+            .add_systems(Update, (init_random_walk, ));
+
+        app.add_systems(Update, (goto_system,));
 
         //idle feeding
         app.add_systems(Update, idle_feeding_system);
@@ -117,8 +119,6 @@ impl Default for StateChance {
             next_state: vec![
                 (1.0, Decision::Feed), //zero values for unimplemented things
                 (0.5, Decision::RandomWalk),
-                (0.5, Decision::MoveToSafeArea),
-                (0.5, Decision::Escape),
             ],
         };
         res.normalize();
@@ -521,7 +521,7 @@ fn collect_field(
                     let around_mean_vel = sum / (count as f32);
                     let dv = around_mean_vel - vel.0;
                     walk.target_velocity =
-                        vel.0 + 0.5 * dv + 0.9 * distance_force + Vec3::new(0.0, 0.0, sum_dz);
+                        vel.0 + 0.9 * distance_force + Vec3::new(0.0, 0.0, sum_dz);
                 } else {
                     walk.target_velocity = vel.0;
                 }

@@ -9,6 +9,8 @@ pub mod sheep;
 pub mod sprite_material;
 pub mod test_level;
 pub mod torch;
+pub mod storyteller;
+pub mod level_ui;
 
 use std::f32::consts::PI;
 
@@ -53,6 +55,8 @@ impl Plugin for GamePlugin {
             safe_area::SafeAreaPlugin,
             sprite_material::SpriteMaterialPlugin,
             sheep::SheepPlugin,
+            storyteller::StorytellerPlugin,
+            level_ui::LevelUiPlugin,
         ));
 
         //For long term updates
