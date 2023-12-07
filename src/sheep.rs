@@ -49,7 +49,7 @@ impl Plugin for SheepPlugin {
 
         //random walk
         app.add_event::<InitRandomWalk>()
-            .add_systems(Update, (init_random_walk, ));
+            .add_systems(Update, (init_random_walk,));
 
         app.add_systems(Update, (goto_system,));
 

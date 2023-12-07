@@ -2,15 +2,15 @@
 
 pub mod common_storage;
 pub mod debug_diagnostic;
+pub mod level_ui;
 pub mod physics;
 pub mod player;
 pub mod safe_area;
 pub mod sheep;
 pub mod sprite_material;
+pub mod storyteller;
 pub mod test_level;
 pub mod torch;
-pub mod storyteller;
-pub mod level_ui;
 
 use std::f32::consts::PI;
 

@@ -30,30 +30,30 @@ fn create_level_ui_system(
     text_style.font_size = 24.0;
 
     //Spawn top info bar
-    commands.spawn((NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Px(50.0),
-                flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
+    commands
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Px(50.0),
+                    flex_direction: FlexDirection::Row,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
 
-                align_self: AlignSelf::Stretch,
+                    align_self: AlignSelf::Stretch,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        }, 
-        LevelUi
-    )).with_children(|parent| {
-        parent.spawn((
-            TextBundle::from_section(
-                "",
-                text_style.clone()
-            ),
             LevelUi,
-            LevelTimer
-        ));
-    });
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                TextBundle::from_section("", text_style.clone()),
+                LevelUi,
+                LevelTimer,
+            ));
+        });
 
     ev_create_level_ui.clear();
 }

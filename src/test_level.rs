@@ -5,8 +5,8 @@ use rand::prelude::*;
 use std::f32::consts::PI;
 
 use crate::{
-    get_sprite_rotation, player::SpawnPlayer, safe_area::SafeArea,
-    sprite_material::create_plane_mesh, torch::SpawnTorch, level_ui::CreateLevelUi,
+    get_sprite_rotation, level_ui::CreateLevelUi, player::SpawnPlayer, safe_area::SafeArea,
+    sprite_material::create_plane_mesh, torch::SpawnTorch,
 };
 
 const TREE_PATH: &str = "test/pine.png";
@@ -33,7 +33,7 @@ pub fn setup(
     mut spawn_player_event: EventWriter<SpawnPlayer>,
     mut spawn_torch: EventWriter<SpawnTorch>,
     level_size: Res<LevelSize>,
-    mut create_level_ui : EventWriter<CreateLevelUi>,
+    mut create_level_ui: EventWriter<CreateLevelUi>,
 ) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
