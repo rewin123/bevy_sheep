@@ -409,7 +409,7 @@ pub fn setup(
     //spawn sheeps
     let r = level_size.0 / 1.5;
     let mut rng = rand::thread_rng();
-    let sheep_count = 100;
+    let sheep_count = 2000;
 
     for _ in 0..sheep_count {
         let x = rng.gen_range(-r..r);
