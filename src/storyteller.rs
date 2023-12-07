@@ -10,8 +10,10 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
-    player::DOG_SPEED,
-    sheep::{GoTo, Sheep, RANDOM_WALK_SPEED_MULTIPLIER, SHEEP_SPEED},
+    player::{Dog, DOG_SPEED},
+    sheep::{
+        Decision, GoTo, IdleFeeding, IsScared, Sheep, RANDOM_WALK_SPEED_MULTIPLIER, SHEEP_SPEED,
+    },
     test_level::LevelSize,
 };
 
@@ -49,20 +51,24 @@ fn setup_start_time(mut teller: ResMut<Storyteller>, time: Res<Time>) {
 
 fn storyteller_system(
     mut commands: Commands,
-    sheep: Query<(Entity, &Transform), With<Sheep>>,
+    sheep: Query<(Entity, &Transform), (With<Sheep>, Without<IsScared>, Without<GoTo>)>,
     mut teller: ResMut<Storyteller>,
     time: Res<Time>,
     level_size: Res<LevelSize>,
+    dog: Query<&Transform, With<Dog>>,
 ) {
+    let Ok(dog_transform) = dog.get_single() else {
+        return;
+    };
     if teller.next_wave.is_none() {
         let level_time = time.elapsed_seconds() - teller.level_start_time;
         let unfiorm_time = level_time / teller.level_duration;
 
         let sheep_count = sheep.iter().count() as f32;
 
-        let c = sheep_count * unfiorm_time * 0.2 + 1.0;
-        let dt = 15.0 - 10.0 * unfiorm_time;
-        let n = 1.0 + 2.0 * unfiorm_time;
+        let c = sheep_count * unfiorm_time * 0.2 + 1.0 + 0.05 * sheep_count;
+        let dt = 10.0 - 3.0 * unfiorm_time;
+        let n = 2.0 + 2.0 * unfiorm_time;
 
         teller.next_wave = Some(SheepWave {
             count: c as usize,
@@ -90,7 +96,8 @@ fn storyteller_system(
                     .map(|(e, t)| {
                         let dir = t.translation;
                         let proj_dir = dir.dot(random_dir);
-                        (e, dir, proj_dir)
+                        let dist_to_dog = (t.translation - dog_transform.translation).length();
+                        (e, dir, proj_dir + dist_to_dog)
                     })
                     .collect::<Vec<_>>();
                 sorted_sheep.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
@@ -99,9 +106,13 @@ fn storyteller_system(
                 for i in 0..split_c {
                     if let Some((e, pos, dist)) = sorted_sheep.get(i) {
                         info!("Sending {:?} with {:?}", e, dist);
-                        commands.entity(*e).insert(GoTo {
-                            target: *pos + level_size.0 * random_dir,
-                        });
+                        commands
+                            .entity(*e)
+                            .insert(GoTo {
+                                target: *pos + level_size.0 * 2.0 * random_dir,
+                            })
+                            .insert(Decision::Escape)
+                            .remove::<IdleFeeding>();
                     }
                 }
             }

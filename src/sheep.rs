@@ -26,11 +26,11 @@ const SHEEP_ACCELERATION: f32 = SHEEP_SPEED * 3.0;
 
 const RANDOM_WALK_RANGE: f32 = 5.0;
 const RANDOM_WALK_ACCEPT_RADIUS: f32 = 0.5;
-pub const RANDOM_WALK_SPEED_MULTIPLIER: f32 = 0.2;
+pub const RANDOM_WALK_SPEED_MULTIPLIER: f32 = 0.3;
 
 //IDLE FEEDING must be large enough so that player can see sheep and react for escapes
-const IDLE_FEEDING_TIME: f32 = 5.0;
-const IDLE_FEEDING_TIME_RANGE: f32 = 1.5;
+const IDLE_FEEDING_TIME: f32 = 2.5;
+const IDLE_FEEDING_TIME_RANGE: f32 = 1.0;
 
 const MOVE_IN_DIST: f32 = 11.0;
 const MOVE_OUT_DIST: f32 = 10.0;
@@ -360,9 +360,12 @@ pub fn update_scared_sheeps(
 
     for (e, t, mut walk, mut dec, mut scare) in sheeps.iter_mut() {
         if scare.time > 2. {
-            *dec = Decision::Idle;
+            *dec = Decision::Feed;
             walk.0 = Vec3::ZERO;
-            commands.entity(e).remove::<IsScared>();
+            commands.entity(e).remove::<IsScared>().insert(IdleFeeding {
+                //sheep in stress for 3 seconds after dog bark
+                time: 3.0,
+            });
         } else {
             scare.time += time.delta_seconds();
 
@@ -413,9 +416,9 @@ pub fn setup(
     });
 
     //spawn sheeps
-    let r = level_size.0 / 1.5;
+    let r = level_size.0 / 1.5 / 2.0;
     let mut rng = rand::thread_rng();
-    let sheep_count = 100;
+    let sheep_count = 1000;
 
     for _ in 0..sheep_count {
         let x = rng.gen_range(-r..r);
