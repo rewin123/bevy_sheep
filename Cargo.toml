@@ -62,6 +62,7 @@ winit = { version = "0.28.7", default-features = false }
 image = { version = "0.24", default-features = false }
 bevy_egui = "0.23.0"
 bevy-inspector-egui = {version = "0.21.0", optional = true }
+bevy_spatial = "0.7.0"
 
 [build-dependencies]
 embed-resource = "1.4"

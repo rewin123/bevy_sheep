@@ -1,6 +1,6 @@
-use std::f32::consts::PI;
+use std::{f32::consts::{PI, E}, time::Duration};
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 use rand::{Rng, rngs::ThreadRng};
 
 use crate::{
@@ -10,6 +10,10 @@ use crate::{
     safe_area::SafeArea,
     sprite_material::create_plane_mesh,
     test_level::LevelSize,
+};
+
+use bevy_spatial::{
+    kdtree::KDTree3, AutomaticUpdate, SpatialAccess, SpatialStructure, TransformMode,
 };
 
 const SHEEP_PATH: &str = "test/sheep.png";
@@ -58,6 +62,12 @@ impl Plugin for SheepPlugin {
         app.register_type::<StateChance>()
             .register_type::<Decision>()
             .register_type::<IsScared>();
+
+        app.add_plugins(AutomaticUpdate::<Sheep>::new()
+            .with_frequency(Duration::from_millis(1000))
+            .with_transform(TransformMode::Transform)
+            .with_spatial_ds(SpatialStructure::KDTree3))
+            .add_systems(Update, collect_field);
     }
 }
 
@@ -69,6 +79,9 @@ pub struct Sheep;
 pub struct IsScared {
     time: f32,
 }
+
+#[derive(Component, Default)]
+pub struct SheepTargetVel(pub Vec3);
 
 #[derive(Default, PartialEq, Eq, Debug, Clone, Component, Reflect, Copy)]
 #[reflect(Component, Default)]
@@ -138,16 +151,16 @@ impl StateChance {
 pub fn scared_sheeps(
     mut commands: Commands,
     mut event_reader: EventReader<Bark>,
-    mut sheeps: Query<(Entity, &Transform, &mut WalkController, &mut Decision), With<Sheep>>,
+    mut sheeps: Query<(Entity, &Transform, &mut SheepTargetVel, &mut Decision), With<Sheep>>,
 ) {
     if let Some(bark) = event_reader.read().next() {
         let bark_origin = bark.position;
         for mut sheep in &mut sheeps {
             if sheep.1.translation.distance(bark_origin) <= bark.radius {
                 let scare = IsScared::default();
-                sheep.2.target_velocity =
+                sheep.2.0 =
                     (sheep.1.translation - bark_origin).normalize_or_zero() * SHEEP_SPEED;
-                sheep.2.target_velocity.y = 0.0; //sheep must not fly and be in fixed height
+                sheep.2.0.y = 0.0; //sheep must not fly and be in fixed height
                 commands
                     .entity(sheep.0)
                     .insert(scare)
@@ -200,18 +213,18 @@ fn goto_system(
     mut goto_query: Query<(
         Entity,
         &mut Transform,
-        &mut WalkController,
+        &mut SheepTargetVel,
         &mut Decision,
         &GoTo,
     )>,
 ) {
     for (e, t, mut v, mut dec, rw) in &mut goto_query.iter_mut() {
         if t.translation.distance(rw.target) < RANDOM_WALK_ACCEPT_RADIUS {
-            v.target_velocity = Vec3::ZERO;
+            v.0 = Vec3::ZERO;
             commands.entity(e).remove::<GoTo>();
             *dec = Decision::Idle;
         } else {
-            v.target_velocity = (rw.target - t.translation).normalize()
+            v.0 = (rw.target - t.translation).normalize()
                 * SHEEP_SPEED
                 * RANDOM_WALK_SPEED_MULTIPLIER;
         }
@@ -327,7 +340,7 @@ pub fn init_escape(
 pub fn update_scared_sheeps(
     mut commands: Commands,
     time: Res<Time>,
-    mut sheeps: Query<(Entity, &Transform, &mut WalkController, &mut Decision, &mut IsScared), With<Sheep>>,
+    mut sheeps: Query<(Entity, &Transform, &mut SheepTargetVel, &mut Decision, &mut IsScared), With<Sheep>>,
     dog : Query<&Transform, With<Dog>>,
     safeareas: Query<&SafeArea>
 ) {
@@ -338,7 +351,7 @@ pub fn update_scared_sheeps(
     for (e, t, mut walk, mut dec, mut scare) in sheeps.iter_mut() {
         if scare.time > 2. {
             *dec = Decision::Idle;
-            walk.target_velocity = Vec3::ZERO;
+            walk.0 = Vec3::ZERO;
             commands.entity(e).remove::<IsScared>();
         } else {
             scare.time += time.delta_seconds();
@@ -368,9 +381,9 @@ pub fn update_scared_sheeps(
                 let dir_to_sa = (sa.get_center() - t.translation).normalize_or_zero();
 
                 if dir_to_sa.dot(dir) > 0.0 {
-                    walk.target_velocity = -dir * speed_amount;
+                    walk.0 = -dir * speed_amount;
                 } else {
-                    walk.target_velocity = (-dir + dir_to_sa).normalize_or_zero() * speed_amount;
+                    walk.0 = (-dir + dir_to_sa).normalize_or_zero() * speed_amount;
                 }
             }
         }
@@ -425,6 +438,7 @@ pub fn setup(
                 acceleration: SHEEP_ACCELERATION,
                 max_speed: SHEEP_SPEED,
             },
+            SheepTargetVel::default()
         ));
     }
 }
@@ -444,6 +458,40 @@ fn idle_feeding_system(
         if idle.time < 0.0 {
             *dec = Decision::Idle;
             commands.entity(e).remove::<IdleFeeding>();
+        }
+    }
+}
+
+type NNTree = KDTree3<Sheep>;
+
+fn collect_field(
+    mut sheep : Query<(&Transform, &SheepTargetVel, &mut WalkController, &Decision), With<Sheep>>,
+    mut field : ResMut<NNTree> 
+) {
+    unsafe {
+        for (t, vel, mut walk, dec) in sheep.iter_unsafe() {
+            if *dec != Decision::Idle {
+                let neighboors = field.k_nearest_neighbour(t.translation, 4);
+
+                let mut sum = Vec3::ZERO;
+                let mut count = 0;
+                for (_, n_e) in neighboors {
+                    if let Some(n_e) = n_e {
+                        if let Ok((_, n_vel, _, dec)) = sheep.get(n_e) {
+                            if *dec != Decision::Feed {
+                                sum += n_vel.0;
+                                count += 1;
+                            }
+                        }
+                    }
+                }
+
+                if count > 0 {
+                    walk.target_velocity = 0.5 * vel.0 + 0.5 * sum / (count as f32);
+                } else {
+                    walk.target_velocity = vel.0;
+                }
+            }
         }
     }
 }
