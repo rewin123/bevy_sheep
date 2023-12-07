@@ -99,16 +99,25 @@ pub struct SheepCounter {
     pub count: u32,
 }
 
+#[derive(Component)]
+pub struct OutOfSafeArea;
+
 fn count_sheeps(
+    mut commands: Commands,
     safe_areas: Query<&SafeArea>,
-    sheep: Query<&Transform, With<Sheep>>,
+    sheep: Query<(Entity, &Transform), With<Sheep>>,
     mut counter: ResMut<SheepCounter>,
 ) {
     let mut count = 0;
     for safe_area in safe_areas.iter() {
-        for sheep in sheep.iter() {
+        for (e, sheep) in sheep.iter() {
             if safe_area.in_area(Vec2::new(sheep.translation.x, sheep.translation.z)) {
                 count += 1;
+                commands.entity(e).remove::<OutOfSafeArea>();
+            } else {
+                commands
+                    .entity(e)
+                    .insert(OutOfSafeArea);
             }
         }
     }

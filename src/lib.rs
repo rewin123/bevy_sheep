@@ -11,6 +11,7 @@ pub mod sprite_material;
 pub mod storyteller;
 pub mod test_level;
 pub mod torch;
+pub mod wolf;
 
 use std::f32::consts::PI;
 
@@ -57,6 +58,7 @@ impl Plugin for GamePlugin {
             sheep::SheepPlugin,
             storyteller::StorytellerPlugin,
             level_ui::LevelUiPlugin,
+            wolf::WolfPlugin,
         ));
 
         //For long term updates

@@ -16,7 +16,7 @@ pub struct LevelSize(pub f32);
 
 impl Default for LevelSize {
     fn default() -> Self {
-        Self(30.)
+        Self(40.)
     }
 }
 
