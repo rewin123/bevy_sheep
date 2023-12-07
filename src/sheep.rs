@@ -32,8 +32,7 @@ const IDLE_FEEDING_TIME_RANGE: f32 = 1.5;
 const MOVE_IN_DIST: f32 = 11.0;
 const MOVE_OUT_DIST: f32 = 10.0;
 
-const SCARE_RADIUS: f32 = 5.0;
-const SCARE_MAX_DIST: f32 = 20.0;
+const SCARE_MAX_DIST: f32 = 10.0;
 
 pub struct SheepPlugin;
 
@@ -64,7 +63,7 @@ impl Plugin for SheepPlugin {
             .register_type::<IsScared>();
 
         app.add_plugins(AutomaticUpdate::<Sheep>::new()
-            .with_frequency(Duration::from_millis(1000))
+            .with_frequency(Duration::from_millis(250))
             .with_transform(TransformMode::Transform)
             .with_spatial_ds(SpatialStructure::KDTree3))
             .add_systems(Update, collect_field);
@@ -112,8 +111,8 @@ impl Default for StateChance {
             //For testing i made all weights 1 so all next states are equally likely to be chosen
             next_state: vec![
                 (1.0, Decision::Feed), //zero values for unimplemented things
-                (1.0, Decision::RandomWalk),
-                (1.0, Decision::MoveToSafeArea),
+                (0.5, Decision::RandomWalk),
+                (0.5, Decision::MoveToSafeArea),
                 (0.5, Decision::Escape),
             ],
         };
@@ -359,10 +358,6 @@ pub fn update_scared_sheeps(
             let dog_dpos = dog_transform.translation - t.translation;
             let dog_distance = dog_dpos.length();
 
-            if dog_distance < SCARE_RADIUS {
-                scare.time = 0.0;
-            }
-
             let dir = dog_dpos.normalize_or_zero();
 
             let mut nearest_sa = None;
@@ -375,7 +370,7 @@ pub fn update_scared_sheeps(
                 }
             }
 
-            let speed_amount = SHEEP_SPEED * (1.0 - dog_distance / SCARE_MAX_DIST);
+            let speed_amount = (SHEEP_SPEED * (1.0 - dog_distance / SCARE_MAX_DIST)).max(0.0_f32);
 
             if let Some(sa) = nearest_sa {
                 let dir_to_sa = (sa.get_center() - t.translation).normalize_or_zero();
@@ -409,7 +404,7 @@ pub fn setup(
     //spawn sheeps
     let r = level_size.0 / 1.5;
     let mut rng = rand::thread_rng();
-    let sheep_count = 2000;
+    let sheep_count = 100;
 
     for _ in 0..sheep_count {
         let x = rng.gen_range(-r..r);
@@ -464,30 +459,48 @@ fn idle_feeding_system(
 
 type NNTree = KDTree3<Sheep>;
 
+const PREFERED_DISTANCE: f32 = 1.3;
+const PREFERED_DY: f32 = 0.1;
+
 fn collect_field(
-    mut sheep : Query<(&Transform, &SheepTargetVel, &mut WalkController, &Decision), With<Sheep>>,
+    mut sheep : Query<(&Transform, &SheepTargetVel, &mut WalkController, &Velocity, &Decision), With<Sheep>>,
     mut field : ResMut<NNTree> 
 ) {
     unsafe {
-        for (t, vel, mut walk, dec) in sheep.iter_unsafe() {
+        for (t, vel, mut walk, _, dec) in sheep.iter_unsafe() {
             if *dec != Decision::Idle {
-                let neighboors = field.k_nearest_neighbour(t.translation, 4);
+                let neighboors = field.k_nearest_neighbour(t.translation, 7);
 
                 let mut sum = Vec3::ZERO;
+                let mut distance_force = Vec3::ZERO;
+                let mut sum_targets = Vec3::ZERO;
+                let mut sum_dz = 0.0;
                 let mut count = 0;
-                for (_, n_e) in neighboors {
+                for (_, n_e) in neighboors.iter().skip(1) {
                     if let Some(n_e) = n_e {
-                        if let Ok((_, n_vel, _, dec)) = sheep.get(n_e) {
-                            if *dec != Decision::Feed {
-                                sum += n_vel.0;
-                                count += 1;
+                        if let Ok((n_t, n_tar, _, n_vel, _)) = sheep.get(*n_e) {
+                            sum += n_vel.0;
+                            count += 1;
+                            
+                            let dp = t.translation - n_t.translation;
+                            let length = dp.length();
+                            if length < PREFERED_DISTANCE {
+                                distance_force += dp * (1.0 - length / PREFERED_DISTANCE);
                             }
+
+                            if dp.z.abs() < PREFERED_DY {
+                                sum_dz += (1.0 - dp.z.abs() / PREFERED_DY) * dp.z.signum();
+                            }
+
+                            sum_targets += n_tar.0;
                         }
                     }
                 }
 
                 if count > 0 {
-                    walk.target_velocity = 0.5 * vel.0 + 0.5 * sum / (count as f32);
+                    let around_mean_vel = sum / (count as f32);
+                    let dv = around_mean_vel - vel.0;
+                    walk.target_velocity = vel.0 + 0.5 * dv + 0.9 * distance_force + Vec3::new(0.0, 0.0, sum_dz);
                 } else {
                     walk.target_velocity = vel.0;
                 }
