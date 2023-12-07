@@ -1,70 +1,65 @@
 use std::f32::consts::PI;
 
-use bevy::{
-    gltf::GltfMesh,
-    pbr::ExtendedMaterial,
-    prelude::*,
-    render::{mesh::Indices, render_resource::PrimitiveTopology},
-};
+use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
     get_sprite_rotation,
     physics::{Velocity, WalkController},
-    player::{Bark, DOG_SPEED, DOG_ACCELERATION},
-    sprite_material::{create_plane_mesh, SpriteExtension},
-    test_level::TEST_LEVEL_SIZE,
+    player::{Bark, DOG_SPEED},
+    safe_area::SafeArea,
+    sprite_material::create_plane_mesh,
+    test_level::LevelSize,
 };
 
 const SHEEP_PATH: &str = "test/sheep.png";
 
-const SHEEP_SPEED : f32 = DOG_SPEED * 0.5;
-const SHEEP_ACCELERATION : f32 = SHEEP_SPEED * 3.0;
+const SHEEP_SPEED: f32 = DOG_SPEED * 0.5;
+const SHEEP_ACCELERATION: f32 = SHEEP_SPEED * 3.0;
 
-const RANDOM_WALK_RANGE : f32 = 5.0;
-const RANDOM_WALK_ACCEPT_RADIUS : f32 = 0.5;
-const RANDOM_WALK_SPEED_MULTIPLIER : f32 = 0.2;
+const RANDOM_WALK_RANGE: f32 = 5.0;
+const RANDOM_WALK_ACCEPT_RADIUS: f32 = 0.5;
+const RANDOM_WALK_SPEED_MULTIPLIER: f32 = 0.2;
 
-const IDLE_FEEDING_TIME : f32 = 1.0;
-const IDLE_FEEDING_TIME_RANGE : f32 = 0.5;
+const IDLE_FEEDING_TIME: f32 = 1.0;
+const IDLE_FEEDING_TIME_RANGE: f32 = 0.5;
 
 pub struct SheepPlugin;
 
 impl Plugin for SheepPlugin {
     fn build(&self, app: &mut App) {
-
         app.init_resource::<StateChance>();
 
-        app.add_systems(
-            Update,
-            (
-                scared_sheeps,
-                update_scared_sheeps,
-            ),
-        );
+        app.add_systems(Update, (scared_sheeps, update_scared_sheeps));
 
-        app.add_systems(Update, (
-            sheep_state,
-        ));
+        app.add_systems(Update, (sheep_state,));
 
         //random walk
         app.add_event::<InitRandomWalk>()
-            .add_systems(Update, (
-                init_random_walk,
-                random_walk_system,
-            ));
+            .add_systems(Update, (init_random_walk, random_walk_system));
 
         //idle feeding
         app.add_systems(Update, idle_feeding_system);
+
+        // Move to safearea
+        app.add_event::<SafeAreaWalk>()
+            .add_systems(Update, (init_safeareawalk_walk, walk_to_safe_zone_system));
+
+        app.register_type::<StateChance>()
+            .register_type::<Decision>()
+            .register_type::<IsScared>();
     }
 }
 
-#[derive(Default, PartialEq, Eq, Debug, Clone, Component, Reflect)]
-pub struct Sheep;
+#[derive(Default, PartialEq, Debug, Clone, Component, Reflect)]
+pub struct Sheep {
+    time: f32,
+}
 
 #[derive(Default, PartialEq, Debug, Clone, Component, Reflect)]
-pub struct IsScared{
-    time : f32
+#[reflect(Component, Default)]
+pub struct IsScared {
+    time: f32,
 }
 
 #[derive(Default, PartialEq, Eq, Debug, Clone, Component, Reflect, Copy)]
@@ -73,11 +68,10 @@ pub enum Decision {
     #[default]
     Idle,
     Feed,
-    IdleFeeding,
     RandomWalk,
-    MoveToSafeZone,
-    MoveOutSafeZone,
-    Scared //Mark that ship will not be able to another decision
+    MoveToSafeArea,
+    MoveOutSafeArea,
+    Scared, //Mark that sheep will not be able to another decision
 }
 
 #[derive(PartialEq, Debug, Clone, Resource, Reflect)]
@@ -91,12 +85,11 @@ impl Default for StateChance {
         let mut res = Self {
             //set weights
             next_state: vec![
-                (0.0, Decision::Idle),
-                (0.0, Decision::Feed), //zero values for unimplemented things
-                (1.0, Decision::IdleFeeding),
-                (1.0, Decision::RandomWalk),
-                (0.0, Decision::MoveToSafeZone),
-                (0.0, Decision::MoveOutSafeZone),
+                (0.35, Decision::Idle),
+                (0.5, Decision::Feed), //zero values for unimplemented things
+                (0.1, Decision::RandomWalk),
+                (0.7, Decision::MoveToSafeArea),
+                (1.0, Decision::MoveOutSafeArea),
             ],
         };
         res.normalize();
@@ -114,6 +107,7 @@ impl StateChance {
         for (w, _) in &mut self.next_state {
             *w /= sum;
         }
+        self.next_state.sort_by(|a, b| a.0.total_cmp(&b.0));
     }
 }
 
@@ -127,14 +121,16 @@ pub fn scared_sheeps(
         for mut sheep in &mut sheeps {
             if sheep.1.translation.distance(bark_origin) <= bark.radius {
                 let scare = IsScared::default();
-                sheep.2 .target_velocity = (sheep.1.translation - bark_origin).normalize_or_zero() * SHEEP_SPEED;
-                sheep.2 .target_velocity.y = 0.0; //sheep must not fly and be in fixed height
-                commands.entity(sheep.0).insert(scare)
+                sheep.2.target_velocity =
+                    (sheep.1.translation - bark_origin).normalize_or_zero() * SHEEP_SPEED;
+                sheep.2.target_velocity.y = 0.0; //sheep must not fly and be in fixed height
+                commands
+                    .entity(sheep.0)
+                    .insert(scare)
                     .remove::<RandomWalk>()
-                    .remove::<IdleFeeding>();
+                    .remove::<IdleFeeding>()
+                    .remove::<SafeAreaTarget>();
                 *sheep.3 = Decision::Scared;
-
-
             }
         }
     }
@@ -143,32 +139,60 @@ pub fn scared_sheeps(
 
 #[derive(Event)]
 pub struct InitRandomWalk {
-    pub e : Entity,
+    pub e: Entity,
+}
+
+#[derive(Event)]
+pub struct SafeAreaWalk {
+    pub e: Entity,
 }
 
 #[derive(Component)]
 pub struct RandomWalk {
-    pub target : Vec3,
+    pub target: Vec3,
+}
+
+#[derive(Component)]
+pub struct SafeAreaTarget {
+    pub target: Vec3,
 }
 
 fn init_random_walk(
     mut commands: Commands,
     mut event_reader: EventReader<InitRandomWalk>,
-    poses : Query<&Transform, With<Sheep>>
+    poses: Query<&Transform, With<Sheep>>,
 ) {
-
     let mut rand = rand::thread_rng();
     for ev in event_reader.read() {
         if let Ok(t) = poses.get_component::<Transform>(ev.e) {
             // info!("init random walk for {:?}", ev.e);
             let r = rand.gen_range(0.0..RANDOM_WALK_RANGE);
-            let angle = rand.gen_range(0.0..PI*2.0);
-            
+            let angle = rand.gen_range(0.0..PI * 2.0);
+
             commands.entity(ev.e).insert(RandomWalk {
                 target: t.translation + Vec3::new(angle.cos() * r, 0.0, angle.sin() * r),
             });
-        } else {
-            // warn!("init random walk for {:?} failed", ev.e);
+        }
+    }
+    event_reader.clear();
+}
+
+fn init_safeareawalk_walk(
+    mut commands: Commands,
+    mut event_reader: EventReader<SafeAreaWalk>,
+    poses: Query<&Transform, With<Sheep>>,
+    safeareas: Query<&SafeArea>,
+    level_size: Res<LevelSize>,
+) {
+    let Ok(safearea) = safeareas.get_single() else {
+        return;
+    };
+
+    for ev in event_reader.read() {
+        if poses.get_component::<Transform>(ev.e).is_ok() {
+            commands.entity(ev.e).insert(SafeAreaTarget {
+                target: safearea.get_random_point_inside(level_size.0),
+            });
         }
     }
     event_reader.clear();
@@ -176,15 +200,46 @@ fn init_random_walk(
 
 fn random_walk_system(
     mut commands: Commands,
-    mut random_walks: Query<(Entity, &mut Transform, &mut WalkController, &mut Decision, &RandomWalk)>,
+    mut random_walks: Query<(
+        Entity,
+        &mut Transform,
+        &mut WalkController,
+        &mut Decision,
+        &RandomWalk,
+    )>,
 ) {
-    for (e, mut t, mut v, mut dec, rw) in &mut random_walks.iter_mut() {
+    for (e, t, mut v, mut dec, rw) in &mut random_walks.iter_mut() {
         if t.translation.distance(rw.target) < RANDOM_WALK_ACCEPT_RADIUS {
             v.target_velocity = Vec3::ZERO;
             commands.entity(e).remove::<RandomWalk>();
             *dec = Decision::Idle;
         } else {
-            v.target_velocity = (rw.target - t.translation).normalize() * SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER;
+            v.target_velocity = (rw.target - t.translation).normalize()
+                * SHEEP_SPEED
+                * RANDOM_WALK_SPEED_MULTIPLIER;
+        }
+    }
+}
+
+fn walk_to_safe_zone_system(
+    mut commands: Commands,
+    mut safe_walks: Query<(
+        Entity,
+        &mut Transform,
+        &mut WalkController,
+        &mut Decision,
+        &SafeAreaTarget,
+    )>,
+) {
+    for (e, t, mut v, mut dec, rw) in &mut safe_walks.iter_mut() {
+        if t.translation.distance(rw.target) < RANDOM_WALK_ACCEPT_RADIUS {
+            v.target_velocity = Vec3::ZERO;
+            commands.entity(e).remove::<SafeAreaTarget>();
+            *dec = Decision::Idle;
+        } else {
+            v.target_velocity = (rw.target - t.translation).normalize()
+                * SHEEP_SPEED
+                * RANDOM_WALK_SPEED_MULTIPLIER;
         }
     }
 }
@@ -192,51 +247,49 @@ fn random_walk_system(
 pub fn sheep_state(
     mut commands: Commands,
     state_matrix: Res<StateChance>,
-    mut sheeps: Query<(Entity, &mut Decision), With<Sheep>>,
+    time: Res<Time>,
+    mut sheeps: Query<(Entity, &mut Decision, &mut Sheep), Without<IsScared>>,
     mut init_random_walk: EventWriter<InitRandomWalk>,
+    mut init_safe_walk: EventWriter<SafeAreaWalk>,
 ) {
     let mut rand = rand::thread_rng();
-    for (e, mut dec) in &mut sheeps.iter_mut() {
-        if *dec == Decision::Idle {
+    for (e, mut dec, mut sheep) in &mut sheeps.iter_mut() {
+        sheep.time += time.delta_seconds();
+        if *dec == Decision::Idle && sheep.time > 1.5 * IDLE_FEEDING_TIME {
+            sheep.time = 0.;
             let p = rand.gen_range(0.0..1.0);
-            let mut sum = 0.0;
-            let mut next_dec = Decision::Idle;
-            for (w, d) in &state_matrix.next_state {
-                sum += *w;
-                if p < sum {
-                    next_dec = *d;
-                    break;
-                }
-            }
+            let next_dec = state_matrix
+                .next_state
+                .iter()
+                .find(|state| state.0 > p)
+                .map(|s| s.1)
+                .unwrap_or_default();
 
             *dec = next_dec;
 
             match next_dec {
                 Decision::Idle => {
                     // info!("new idle for {:?}", e);
-                },
+                }
                 Decision::Feed => {
-                    *dec = Decision::Idle;
-                },
-                Decision::RandomWalk => {
-                    // info!("new random walk for {:?}", e);
-                    init_random_walk.send(InitRandomWalk { e });
-                },
-                Decision::MoveToSafeZone => {
-                    *dec = Decision::Idle;
-                },
-                Decision::MoveOutSafeZone => {
-                    *dec = Decision::Idle;
-                },
-                Decision::IdleFeeding => {
-                    // info!("new idle feeding for {:?}", e);
                     commands.entity(e).insert(IdleFeeding {
                         time: rand.gen_range(0.0..IDLE_FEEDING_TIME_RANGE) + IDLE_FEEDING_TIME,
                     });
-                },
+                }
+                Decision::RandomWalk => {
+                    // info!("new random walk for {:?}", e);
+                    init_random_walk.send(InitRandomWalk { e });
+                }
+                Decision::MoveToSafeArea => {
+                    init_safe_walk.send(SafeAreaWalk { e });
+                }
+                Decision::MoveOutSafeArea => {
+                    // For now this seems ok
+                    init_random_walk.send(InitRandomWalk { e });
+                }
                 Decision::Scared => {
                     *dec = Decision::Idle;
-                },
+                }
             }
         }
     }
@@ -263,7 +316,7 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
-    // mut _sprite_material: ResMut<Assets<ExtendedMaterial<StandardMaterial, SpriteExtension>>>,
+    level_size: Res<LevelSize>,
 ) {
     let square = meshes.add(create_plane_mesh());
     let sheep_texture: Handle<Image> = asset_server.load(SHEEP_PATH);
@@ -275,7 +328,7 @@ pub fn setup(
     });
 
     //spawn sheeps
-    let r = TEST_LEVEL_SIZE / 1.5;
+    let r = level_size.0 / 1.5;
     let mut rng = rand::thread_rng();
     let sheep_count = 100;
 
@@ -298,14 +351,14 @@ pub fn setup(
                     .with_scale(Vec3::new(13.0 / 10.0, 1.0, 1.0)),
                 ..default()
             },
-            Sheep,
+            Sheep::default(),
             Decision::Idle,
             Velocity::default(),
             WalkController {
                 target_velocity: Vec3::new(0.0, 0.0, 0.0),
                 acceleration: SHEEP_ACCELERATION,
                 max_speed: SHEEP_SPEED,
-            }
+            },
         ));
     }
 }

@@ -11,7 +11,14 @@ use crate::{
 
 const TREE_PATH: &str = "test/pine.png";
 
-pub const TEST_LEVEL_SIZE: f32 = 20.0;
+#[derive(Clone, Resource)]
+pub struct LevelSize(pub f32);
+
+impl Default for LevelSize {
+    fn default() -> Self {
+        Self(20.)
+    }
+}
 
 pub const DAY_SUN_COLOR: &str = "f2ecbe";
 pub const EVENING_SUN_COLOR: &str = "cfaf56";
@@ -25,6 +32,7 @@ pub fn setup(
     asset_server: Res<AssetServer>,
     mut spawn_player_event: EventWriter<SpawnPlayer>,
     mut spawn_torch: EventWriter<SpawnTorch>,
+    level_size: Res<LevelSize>,
 ) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
@@ -64,11 +72,10 @@ pub fn setup(
     let square = meshes.add(create_plane_mesh());
     let tree_texture: Handle<Image> = asset_server.load(TREE_PATH);
 
-    let r = TEST_LEVEL_SIZE;
+    let r = level_size.0;
     let mut rng = rand::thread_rng();
 
     //spawn trees
-    let tree_count = 5000;
     let tree_material = materials.add(StandardMaterial {
         base_color_texture: Some(tree_texture),
         alpha_mode: AlphaMode::Blend,

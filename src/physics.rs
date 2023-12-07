@@ -4,10 +4,7 @@ pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (
-            walk_system,
-            apply_velocity,
-        ).chain());
+        app.add_systems(Update, (walk_system, apply_velocity).chain());
     }
 }
 
@@ -27,14 +24,11 @@ pub struct WalkController {
     pub max_speed: f32,
 }
 
-fn walk_system(
-    time: Res<Time>,
-    mut query: Query<(&mut Velocity, &mut WalkController)>,
-) {
-    for (mut velocity, mut controller) in query.iter_mut() {
+fn walk_system(time: Res<Time>, mut query: Query<(&mut Velocity, &mut WalkController)>) {
+    for (mut velocity, controller) in query.iter_mut() {
         let dspeed = controller.target_velocity - velocity.0;
         let accel = controller.acceleration.min(dspeed.length() * 100.0);
-    
+
         velocity.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
         velocity.0 = velocity.0.clamp_length_max(controller.max_speed);
     }

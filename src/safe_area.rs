@@ -3,6 +3,7 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
+use rand::Rng;
 
 use crate::sheep::Sheep;
 
@@ -42,6 +43,22 @@ impl SafeArea {
                 let r = (*pos1 - sheep_pos).length();
                 r * r <= d * d
             }
+        }
+    }
+
+    pub fn get_random_point_inside(&self, level_size: f32) -> Vec3 {
+        let mut rng = rand::thread_rng();
+        let v2 = (0..)
+            .map(|_| Vec2 {
+                x: rng.gen_range(-level_size..level_size),
+                y: rng.gen_range(-level_size..level_size),
+            })
+            .find(|point| self.in_area(*point))
+            .unwrap();
+        Vec3 {
+            x: v2.x,
+            y: 0.0,
+            z: v2.y,
         }
     }
 
