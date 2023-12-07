@@ -1,12 +1,15 @@
-use std::{f32::consts::{PI, E}, time::Duration};
+use std::{
+    f32::consts::{E, PI},
+    time::Duration,
+};
 
 use bevy::{prelude::*, utils::HashMap};
-use rand::{Rng, rngs::ThreadRng};
+use rand::{rngs::ThreadRng, Rng};
 
 use crate::{
     get_sprite_rotation,
     physics::{Velocity, WalkController},
-    player::{Bark, DOG_SPEED, Dog},
+    player::{Bark, Dog, DOG_SPEED},
     safe_area::SafeArea,
     sprite_material::create_plane_mesh,
     test_level::LevelSize,
@@ -53,7 +56,7 @@ impl Plugin for SheepPlugin {
 
         // Move to safearea
         app.add_event::<SafeAreaWalk>()
-            .add_systems(Update, (init_safeareawalk_walk, ));
+            .add_systems(Update, (init_safeareawalk_walk,));
 
         app.add_event::<EscapeWalk>()
             .add_systems(Update, init_escape);
@@ -62,11 +65,13 @@ impl Plugin for SheepPlugin {
             .register_type::<Decision>()
             .register_type::<IsScared>();
 
-        app.add_plugins(AutomaticUpdate::<Sheep>::new()
-            .with_frequency(Duration::from_millis(250))
-            .with_transform(TransformMode::Transform)
-            .with_spatial_ds(SpatialStructure::KDTree3))
-            .add_systems(Update, collect_field);
+        app.add_plugins(
+            AutomaticUpdate::<Sheep>::new()
+                .with_frequency(Duration::from_millis(250))
+                .with_transform(TransformMode::Transform)
+                .with_spatial_ds(SpatialStructure::KDTree3),
+        )
+        .add_systems(Update, collect_field);
     }
 }
 
@@ -86,7 +91,7 @@ pub struct SheepTargetVel(pub Vec3);
 #[reflect(Component, Default)]
 pub enum Decision {
     #[default]
-    Idle,  //set sheep state to waiting next decision. Not just be idle. For stending we will use Feed or deleted IdleFeeding. We need to have transition states to move to next decision. Addition set of moves will be seen as sheep has plan to move and will be nicely waiting
+    Idle, //set sheep state to waiting next decision. Not just be idle. For stending we will use Feed or deleted IdleFeeding. We need to have transition states to move to next decision. Addition set of moves will be seen as sheep has plan to move and will be nicely waiting
     Feed,
     RandomWalk,
     MoveToSafeArea,
@@ -134,7 +139,7 @@ impl StateChance {
     }
 
     //I separated next decision selection to function
-    fn select_next(&self, rng : &mut ThreadRng) -> Decision {
+    fn select_next(&self, rng: &mut ThreadRng) -> Decision {
         let mut sum = 0.0; //This decisicion selection is based on weights, not prop graph. Just for testing and more stable behavior. Dont change please
         let p = rng.gen_range(0.0..1.0);
         for (w, d) in &self.next_state {
@@ -157,9 +162,8 @@ pub fn scared_sheeps(
         for mut sheep in &mut sheeps {
             if sheep.1.translation.distance(bark_origin) <= bark.radius {
                 let scare = IsScared::default();
-                sheep.2.0 =
-                    (sheep.1.translation - bark_origin).normalize_or_zero() * SHEEP_SPEED;
-                sheep.2.0.y = 0.0; //sheep must not fly and be in fixed height
+                sheep.2 .0 = (sheep.1.translation - bark_origin).normalize_or_zero() * SHEEP_SPEED;
+                sheep.2 .0.y = 0.0; //sheep must not fly and be in fixed height
                 commands
                     .entity(sheep.0)
                     .insert(scare)
@@ -229,8 +233,6 @@ fn goto_system(
         }
     }
 }
-
-
 
 fn init_safeareawalk_walk(
     mut commands: Commands,
@@ -339,9 +341,18 @@ pub fn init_escape(
 pub fn update_scared_sheeps(
     mut commands: Commands,
     time: Res<Time>,
-    mut sheeps: Query<(Entity, &Transform, &mut SheepTargetVel, &mut Decision, &mut IsScared), With<Sheep>>,
-    dog : Query<&Transform, With<Dog>>,
-    safeareas: Query<&SafeArea>
+    mut sheeps: Query<
+        (
+            Entity,
+            &Transform,
+            &mut SheepTargetVel,
+            &mut Decision,
+            &mut IsScared,
+        ),
+        With<Sheep>,
+    >,
+    dog: Query<&Transform, With<Dog>>,
+    safeareas: Query<&SafeArea>,
 ) {
     let Ok(dog_transform) = dog.get_single() else {
         return;
@@ -433,7 +444,7 @@ pub fn setup(
                 acceleration: SHEEP_ACCELERATION,
                 max_speed: SHEEP_SPEED,
             },
-            SheepTargetVel::default()
+            SheepTargetVel::default(),
         ));
     }
 }
@@ -463,8 +474,17 @@ const PREFERED_DISTANCE: f32 = 1.3;
 const PREFERED_DY: f32 = 0.1;
 
 fn collect_field(
-    mut sheep : Query<(&Transform, &SheepTargetVel, &mut WalkController, &Velocity, &Decision), With<Sheep>>,
-    mut field : ResMut<NNTree> 
+    mut sheep: Query<
+        (
+            &Transform,
+            &SheepTargetVel,
+            &mut WalkController,
+            &Velocity,
+            &Decision,
+        ),
+        With<Sheep>,
+    >,
+    mut field: ResMut<NNTree>,
 ) {
     unsafe {
         for (t, vel, mut walk, _, dec) in sheep.iter_unsafe() {
@@ -481,7 +501,7 @@ fn collect_field(
                         if let Ok((n_t, n_tar, _, n_vel, _)) = sheep.get(*n_e) {
                             sum += n_vel.0;
                             count += 1;
-                            
+
                             let dp = t.translation - n_t.translation;
                             let length = dp.length();
                             if length < PREFERED_DISTANCE {
@@ -500,7 +520,8 @@ fn collect_field(
                 if count > 0 {
                     let around_mean_vel = sum / (count as f32);
                     let dv = around_mean_vel - vel.0;
-                    walk.target_velocity = vel.0 + 0.5 * dv + 0.9 * distance_force + Vec3::new(0.0, 0.0, sum_dz);
+                    walk.target_velocity =
+                        vel.0 + 0.5 * dv + 0.9 * distance_force + Vec3::new(0.0, 0.0, sum_dz);
                 } else {
                     walk.target_velocity = vel.0;
                 }
