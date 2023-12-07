@@ -40,7 +40,6 @@ impl Plugin for GamePlugin {
 
         #[cfg(debug_assertions)]
         {
-            
             app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
         }
 
@@ -60,7 +59,6 @@ impl Plugin for GamePlugin {
         app.insert_resource(Time::<Fixed>::from_seconds(1.0));
 
         app.add_systems(Startup, (test_level::setup, sheep::setup));
-        
     }
 }
 

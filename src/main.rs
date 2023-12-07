@@ -9,6 +9,7 @@ use bevy::DefaultPlugins;
 use bevy_game::GamePlugin;
 // ToDo: Replace bevy_game with your new crate name.
 use bevy::asset::AssetMetaCheck;
+use bevy_game::test_level::LevelSize;
 use std::io::Cursor;
 use winit::window::Icon;
 
@@ -17,6 +18,7 @@ fn main() {
         .insert_resource(Msaa::Off)
         .insert_resource(AssetMetaCheck::Never)
         .insert_resource(ClearColor(Color::rgb(0.4, 0.4, 0.4)))
+        .init_resource::<LevelSize>()
         .add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {
