@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::storyteller::LevelTimer;
+use crate::{storyteller::LevelTimer, GameStuff};
 
 pub struct LevelUiPlugin;
 
@@ -47,6 +47,7 @@ fn create_level_ui_system(
                 ..default()
             },
             LevelUi,
+            GameStuff
         ))
         .with_children(|parent| {
             parent.spawn((

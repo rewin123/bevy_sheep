@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{safe_area::SheepCounter, sheep::StartSheepCount, GameSet, GameState};
+use crate::{safe_area::SheepCounter, sheep::StartSheepCount, GameSet, GameState, GameStuff};
 
 const FONT_SIZE: f32 = 24.0;
 
@@ -49,7 +49,8 @@ pub fn setup_diagnostic_panel(mut commands: Commands) {
             background_color: BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.5)),
             ..default()
         })
-        .insert(DiagnosticPanel);
+        .insert(DiagnosticPanel)
+        .insert(GameStuff);
 }
 
 #[derive(Component)]
