@@ -473,7 +473,7 @@ fn idle_feeding_system(
 
 type NNTree = KDTree3<Sheep>;
 
-const PREFERED_DISTANCE: f32 = 0.7;
+const PREFERED_DISTANCE: f32 = 1.0;
 const PREFERED_DY: f32 = 0.1;
 
 fn collect_field(
