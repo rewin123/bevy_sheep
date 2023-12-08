@@ -3,7 +3,7 @@ use bevy::{input::mouse::MouseWheel, prelude::*, window::PrimaryWindow};
 use crate::{
     get_sprite_rotation,
     physics::Velocity,
-    sprite_material::{create_plane_mesh, SpriteExtension, SpriteMaterial},
+    sprite_material::{create_plane_mesh, SpriteExtension, SpriteMaterial}, GameStuff,
 };
 
 const DOG_PATH: &str = "test/dog.png";
@@ -108,6 +108,7 @@ fn spawn_player_by_event(
             Player,
             Dog,
             Velocity::default(),
+            GameStuff
         ));
     }
     event_reader.clear();

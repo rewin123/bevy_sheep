@@ -43,6 +43,7 @@ fn create_level_ui_system(
                     align_self: AlignSelf::Stretch,
                     ..default()
                 },
+                background_color: BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.5)),
                 ..default()
             },
             LevelUi,

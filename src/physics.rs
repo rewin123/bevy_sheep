@@ -1,10 +1,12 @@
 use bevy::prelude::*;
 
+use crate::GameSet;
+
 pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (walk_system, apply_velocity).chain());
+        app.add_systems(Update, (walk_system, apply_velocity).chain().in_set(GameSet::Playing));
     }
 }
 

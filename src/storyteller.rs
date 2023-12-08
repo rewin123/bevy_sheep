@@ -12,9 +12,9 @@ use rand::Rng;
 use crate::{
     player::{Dog, DOG_SPEED},
     sheep::{
-        Decision, GoTo, IdleFeeding, IsScared, Sheep, RANDOM_WALK_SPEED_MULTIPLIER, SHEEP_SPEED,
+        Decision, GoTo, IdleFeeding, IsScared, Sheep, RANDOM_WALK_SPEED_MULTIPLIER, SHEEP_SPEED, StartSheepCount,
     },
-    test_level::LevelSize,
+    test_level::LevelSize, GameState, GameSet,
 };
 
 pub struct StorytellerPlugin;
@@ -26,8 +26,10 @@ impl Plugin for StorytellerPlugin {
             level_duration: 4.0 * 60.0,
             next_wave: None,
         })
-        .add_systems(Update, (storyteller_system, level_timer))
-        .add_systems(PostStartup, setup_start_time);
+        .init_resource::<Score>()
+        .add_systems(Update, (storyteller_system, level_timer).in_set(GameSet::Playing))
+        .add_systems(OnEnter(GameState::Playing), setup_start_time)
+        .add_systems(FixedUpdate, (score_system, fail_system).in_set(GameSet::Playing));
     }
 }
 
@@ -44,6 +46,9 @@ pub struct Storyteller {
     pub level_duration: f32,
     pub next_wave: Option<SheepWave>,
 }
+
+#[derive(Resource, Default)]
+pub struct Score(pub f32);
 
 fn setup_start_time(mut teller: ResMut<Storyteller>, time: Res<Time>) {
     teller.level_start_time = time.elapsed_seconds();
@@ -127,16 +132,51 @@ fn level_timer(
     mut timers: Query<&mut Text, With<LevelTimer>>,
     teller: Res<Storyteller>,
     time: Res<Time>,
+    mut next_state : ResMut<NextState<GameState>>,
+    score : Res<Score>
 ) {
     for mut timer in timers.iter_mut() {
         let level_time = time.elapsed_seconds() - teller.level_start_time;
         if (teller.level_duration - level_time > 0.0) {
             let dur = Duration::from_secs_f32(teller.level_duration - level_time);
 
+            let time = format!("{:02}:{:02}", dur.as_secs() / 60, dur.as_secs() % 60);
+            let score_text = format!("Score: {:.1}", score.0);
+
             timer.sections[0].value =
-                format!("{:02}:{:02}", dur.as_secs() / 60, dur.as_secs() % 60);
+                format!("{}\n{}", time, score_text);
         } else {
             timer.sections[0].value = format!("{:02}:{:02}", 0, 0);
+            next_state.set(GameState::Finish);
         }
     }
+}
+
+fn score_system(
+    mut score : ResMut<Score>,
+    mut alived_sheep: Query<&Sheep>,
+    mut teller: ResMut<Storyteller>,
+    time: Res<Time>,
+    start_sheep_count: Res<StartSheepCount>,
+) {
+    let lived_sheep = alived_sheep.iter().count() as f32 / start_sheep_count.0;
+    score.0 = lived_sheep * time.elapsed_seconds();
+}
+
+fn fail_system(
+    mut commands: Commands,
+    mut next_state : ResMut<NextState<GameState>>,
+    alived_sheep: Query<&Sheep>,
+    start_sheep_count: Res<StartSheepCount>,
+) {
+    if (alived_sheep.iter().count() as f32 / start_sheep_count.0) < 0.5 {
+        next_state.set(GameState::Finish);
+        commands.insert_resource(FailReason::SheepDied);
+    }
+}
+
+#[derive(Resource)]
+pub enum FailReason {
+    SheepDied,
+    TaskFailed
 }

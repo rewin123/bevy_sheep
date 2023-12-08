@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{common_storage::CommonStorage, get_sprite_rotation};
+use crate::{common_storage::CommonStorage, get_sprite_rotation, GameStuff};
 
 const TORCH_PATH: &str = "test/torch.png";
 
@@ -70,6 +70,7 @@ fn spawn_torch(
                     mesh: common_storage.plane.clone(),
                     ..default()
                 },
+                GameStuff,
             ))
             .with_children(|parent| {
                 parent.spawn(PointLightBundle {

@@ -6,7 +6,7 @@ use std::f32::consts::PI;
 
 use crate::{
     get_sprite_rotation, level_ui::CreateLevelUi, player::SpawnPlayer, safe_area::SafeArea,
-    sprite_material::create_plane_mesh, torch::SpawnTorch,
+    sprite_material::create_plane_mesh, torch::SpawnTorch, GameStuff,
 };
 
 const TREE_PATH: &str = "test/pine.png";
@@ -35,19 +35,6 @@ pub fn setup(
     level_size: Res<LevelSize>,
     mut create_level_ui: EventWriter<CreateLevelUi>,
 ) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
-        camera: Camera {
-            hdr: true,
-            ..default()
-        },
-        camera_3d: Camera3d {
-            clear_color: ClearColorConfig::Custom(Color::BLACK),
-            ..default()
-        },
-        ..default()
-    });
-
     //spawn sun
     let mut cascades = CascadeShadowConfigBuilder::default();
     cascades.maximum_distance = 100.0;
@@ -108,7 +95,9 @@ pub fn setup(
                 .with_rotation(get_sprite_rotation())
                 .with_scale(Vec3::new(2.5, 2.6, 5.0)),
             ..default()
-        });
+        }).insert(
+            GameStuff
+        );
     }
 
     //green plane
@@ -123,7 +112,9 @@ pub fn setup(
         }),
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
         ..default()
-    });
+    }).insert(
+        GameStuff
+    );
 
     spawn_player_event.send(SpawnPlayer {
         position: Vec3::new(-r - 2.0, 0.0, 0.0),
@@ -140,7 +131,7 @@ pub fn setup(
     commands.spawn(SafeArea::Rect {
         pos: Vec2::ZERO,
         size: Vec2::new(r * 1.5, r * 1.5),
-    });
+    }).insert(GameStuff);
 
     create_level_ui.send(CreateLevelUi);
 }

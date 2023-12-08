@@ -12,7 +12,7 @@ use crate::{
     player::{Bark, Dog, DOG_SPEED},
     safe_area::SafeArea,
     sprite_material::create_plane_mesh,
-    test_level::LevelSize,
+    test_level::LevelSize, GameSet, GameStuff,
 };
 
 use bevy_spatial::{
@@ -43,25 +43,25 @@ impl Plugin for SheepPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<StateChance>();
 
-        app.add_systems(Update, (scared_sheeps, update_scared_sheeps));
+        app.add_systems(Update, (scared_sheeps, update_scared_sheeps).in_set(GameSet::Playing));
 
-        app.add_systems(Update, (sheep_state,));
+        app.add_systems(Update, (sheep_state,).in_set(GameSet::Playing));
 
         //random walk
         app.add_event::<InitRandomWalk>()
-            .add_systems(Update, (init_random_walk,));
+            .add_systems(Update, (init_random_walk,).in_set(GameSet::Playing));
 
-        app.add_systems(Update, (goto_system,));
+        app.add_systems(Update, (goto_system,).in_set(GameSet::Playing));
 
         //idle feeding
-        app.add_systems(Update, idle_feeding_system);
+        app.add_systems(Update, idle_feeding_system.in_set(GameSet::Playing));
 
         // Move to safearea
         app.add_event::<SafeAreaWalk>()
-            .add_systems(Update, (init_safeareawalk_walk,));
+            .add_systems(Update, (init_safeareawalk_walk,).in_set(GameSet::Playing));
 
         app.add_event::<EscapeWalk>()
-            .add_systems(Update, init_escape);
+            .add_systems(Update, init_escape.in_set(GameSet::Playing));
 
         app.register_type::<StateChance>()
             .register_type::<Decision>()
@@ -77,6 +77,9 @@ impl Plugin for SheepPlugin {
     }
 }
 
+#[derive(Resource)]
+pub struct StartSheepCount(pub f32);
+
 #[derive(Default, PartialEq, Debug, Clone, Component, Reflect)]
 pub struct Sheep;
 
@@ -84,6 +87,7 @@ pub struct Sheep;
 #[reflect(Component, Default)]
 pub struct IsScared {
     time: f32,
+    last_vel: Vec3,
 }
 
 #[derive(Component, Default)]
@@ -396,14 +400,10 @@ pub fn update_scared_sheeps(
                     } else {
                         walk.0 = (-dir + dir_to_sa).normalize_or_zero() * speed_amount;
                     }
+                    scare.last_vel = walk.0;
                 }
             } else {
-                if let Some(sa) = nearest_sa {
-                    let dir_to_sa = (sa.get_center() - t.translation).normalize_or_zero();
-                    walk.0 = dir_to_sa * speed_amount;
-                } else {
-                    walk.0 = Vec3::ZERO;
-                }
+                walk.0 = scare.last_vel;
             }
         }
     }
@@ -429,6 +429,8 @@ pub fn setup(
     let r = level_size.0 / 1.5 / 2.0;
     let mut rng = rand::thread_rng();
     let sheep_count = 1000;
+
+    let mut exact_sheep_count = 0;
 
     for _ in 0..sheep_count {
         let x = rng.gen_range(-r..r);
@@ -458,8 +460,12 @@ pub fn setup(
                 max_speed: SHEEP_SPEED,
             },
             SheepTargetVel::default(),
+            GameStuff,
         ));
+        exact_sheep_count += 1;
     }
+
+    commands.insert_resource(StartSheepCount(exact_sheep_count as f32));
 }
 
 #[derive(Component)]

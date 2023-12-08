@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{safe_area::OutOfSafeArea, player::{DOG_SPEED, Bark}, test_level::LevelSize, common_storage::CommonStorage, get_sprite_rotation, physics::{Velocity, WalkController}};
+use crate::{safe_area::OutOfSafeArea, player::{DOG_SPEED, Bark}, test_level::LevelSize, common_storage::CommonStorage, get_sprite_rotation, physics::{Velocity, WalkController}, GameStuff};
 
 const WOLF_SPEED: f32 = DOG_SPEED * 1.3;
 const WOLF_ACCEL: f32 = WOLF_SPEED * 2.0;
@@ -90,6 +90,7 @@ fn wolf_spawner(
                     acceleration: WOLF_ACCEL,
                     target_velocity: Vec3::ZERO
                 },
+                GameStuff,
         ));
 
         commands.entity(sheep_entity).insert(UnderHunting);

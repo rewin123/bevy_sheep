@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::safe_area::SheepCounter;
+use crate::{safe_area::SheepCounter, sheep::StartSheepCount, GameSet, GameState};
 
 const FONT_SIZE: f32 = 24.0;
 
@@ -9,7 +9,7 @@ pub struct DiagnosticPlugin;
 impl Plugin for DiagnosticPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Startup,
+            OnEnter(GameState::Playing),
             (
                 setup_diagnostic_panel,
                 apply_deferred,
@@ -18,7 +18,7 @@ impl Plugin for DiagnosticPlugin {
             )
                 .chain(),
         )
-        .add_systems(Update, (fps_counting, sheep_counter_text));
+        .add_systems(Update, (fps_counting, sheep_counter_text).in_set(GameSet::Playing));
 
         #[cfg(debug_assertions)]
         {
@@ -94,8 +94,9 @@ pub fn setup_sheep_counter(mut commands: Commands, panels: Query<Entity, With<Di
 pub fn sheep_counter_text(
     mut query: Query<&mut Text, With<ShipDebugCounter>>,
     sheep_counter: Res<SheepCounter>,
+    start_sheep_count: Res<StartSheepCount>
 ) {
     for mut text in &mut query {
-        text.sections[0].value = format!("Sheep in safe area: {}", sheep_counter.count);
+        text.sections[0].value = format!("Sheep in safe area: {}/{}", sheep_counter.count, start_sheep_count.0);
     }
 }
