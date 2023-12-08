@@ -12,6 +12,7 @@ pub mod storyteller;
 pub mod test_level;
 pub mod torch;
 pub mod wolf;
+pub mod menu;
 
 use std::f32::consts::PI;
 

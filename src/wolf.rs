@@ -14,12 +14,14 @@ impl Plugin for WolfPlugin {
             .add_systems(
                 Update,
                 (
+                    apply_deferred,
                     wolf_spawner,
                     catch_system,
                     eating_system,
                     go_out_system,
                     bark,
-                )
+                    apply_deferred
+                ).chain()
             );
     }
 }
@@ -76,7 +78,7 @@ fn wolf_spawner(
                 PbrBundle {
                     mesh: common_storage.plane.clone(),
                     material: wolf_storage.material.clone(),
-                    transform: Transform::from_translation(sheep_transform.translation.normalize() * level_size.0 * 3.0).with_rotation(get_sprite_rotation()),
+                    transform: Transform::from_translation(sheep_transform.translation.normalize() * level_size.0 * 2.0).with_rotation(get_sprite_rotation()),
                     ..default()
                 },
                 TryToCatchSheep {

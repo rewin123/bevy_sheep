@@ -384,15 +384,25 @@ pub fn update_scared_sheeps(
                 }
             }
 
-            let speed_amount = (SHEEP_SPEED * (1.0 - dog_distance / SCARE_MAX_DIST) + SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER).max(0.0_f32);
+            let speed_amount = (SHEEP_SPEED * (1.0 - dog_distance / SCARE_MAX_DIST) + SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER)
+                .max(SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER);
 
-            if let Some(sa) = nearest_sa {
-                let dir_to_sa = (sa.get_center() - t.translation).normalize_or_zero();
+            if dog_distance < SCARE_MAX_DIST {
+                if let Some(sa) = nearest_sa {
+                    let dir_to_sa = (sa.get_center() - t.translation).normalize_or_zero();
 
-                if dir_to_sa.dot(dir) > 0.0 {
-                    walk.0 = -dir * speed_amount;
+                    if dir_to_sa.dot(dir) > 0.0 {
+                        walk.0 = -dir * speed_amount;
+                    } else {
+                        walk.0 = (-dir + dir_to_sa).normalize_or_zero() * speed_amount;
+                    }
+                }
+            } else {
+                if let Some(sa) = nearest_sa {
+                    let dir_to_sa = (sa.get_center() - t.translation).normalize_or_zero();
+                    walk.0 = dir_to_sa * speed_amount;
                 } else {
-                    walk.0 = (-dir + dir_to_sa).normalize_or_zero() * speed_amount;
+                    walk.0 = Vec3::ZERO;
                 }
             }
         }
