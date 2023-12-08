@@ -50,7 +50,12 @@ pub struct Storyteller {
 #[derive(Resource, Default)]
 pub struct Score(pub f32);
 
-fn setup_start_time(mut teller: ResMut<Storyteller>, time: Res<Time>) {
+fn setup_start_time(
+    mut commands: Commands,
+    mut teller: ResMut<Storyteller>, 
+    time: Res<Time>) 
+{
+    commands.remove_resource::<FailReason>();
     teller.level_start_time = time.elapsed_seconds();
 }
 

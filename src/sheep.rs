@@ -24,7 +24,7 @@ const SHEEP_PATH: &str = "test/sheep.png";
 pub const SHEEP_SPEED: f32 = DOG_SPEED * 0.5;
 const SHEEP_ACCELERATION: f32 = SHEEP_SPEED * 3.0;
 
-const RANDOM_WALK_RANGE: f32 = 5.0;
+const RANDOM_WALK_RANGE: f32 =  2.0;
 const RANDOM_WALK_ACCEPT_RADIUS: f32 = 0.5;
 pub const RANDOM_WALK_SPEED_MULTIPLIER: f32 = 0.3;
 
@@ -363,13 +363,10 @@ pub fn update_scared_sheeps(
     };
 
     for (e, t, mut walk, mut dec, mut scare) in sheeps.iter_mut() {
-        if scare.time > 4. {
-            *dec = Decision::Feed;
+        if scare.time > 3. {
+            *dec = Decision::Idle;
             walk.0 = Vec3::ZERO;
-            commands.entity(e).remove::<IsScared>().insert(IdleFeeding {
-                //sheep in stress for 3 seconds after dog bark
-                time: 3.0,
-            });
+            commands.entity(e).remove::<IsScared>();
         } else {
             scare.time += time.delta_seconds();
 
@@ -512,7 +509,10 @@ fn collect_field(
 
                 let mut sum = Vec3::ZERO;
                 let mut distance_force = Vec3::ZERO;
+
                 let mut sum_targets = Vec3::ZERO;
+                let mut target_weight_sum = 0.0;
+
                 let mut sum_dz = 0.0;
                 let mut count = 0;
                 for (_, n_e) in neighboors.iter().skip(1) {
@@ -531,16 +531,21 @@ fn collect_field(
                                 sum_dz += (1.0 - dp.z.abs() / PREFERED_DY) * dp.z.signum();
                             }
 
-                            sum_targets += n_tar.0;
+                            sum_targets += n_vel.0;
+                            target_weight_sum += n_vel.0.length();
                         }
                     }
                 }
 
                 if count > 0 {
-                    let around_mean_vel = sum / (count as f32);
-                    let dv = around_mean_vel - vel.0;
+                    let mean_targets = sum_targets / (target_weight_sum + 0.000001);
+                    let dist_force = 10.0 * distance_force;
+                    let dz = Vec3::new(0.0, 0.0, sum_dz);
+
+                    let wsum = vel.0.length() + mean_targets.length() + dist_force.length() + dz.length();
+                    let max_length = vel.0.length().max(mean_targets.length()).max(dist_force.length());
                     walk.target_velocity =
-                        vel.0 + 10.0 * distance_force + Vec3::new(0.0, 0.0, sum_dz);
+                        (vel.0 + dist_force + mean_targets + dz) / (wsum + 0.000001) * max_length;
                 } else {
                     walk.target_velocity = vel.0;
                 }
