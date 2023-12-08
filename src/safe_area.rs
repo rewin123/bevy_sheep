@@ -115,9 +115,7 @@ fn count_sheeps(
                 count += 1;
                 commands.entity(e).remove::<OutOfSafeArea>();
             } else {
-                commands
-                    .entity(e)
-                    .insert(OutOfSafeArea);
+                commands.entity(e).insert(OutOfSafeArea);
             }
         }
     }

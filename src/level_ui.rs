@@ -47,7 +47,7 @@ fn create_level_ui_system(
                 ..default()
             },
             LevelUi,
-            GameStuff
+            GameStuff,
         ))
         .with_children(|parent| {
             parent.spawn((

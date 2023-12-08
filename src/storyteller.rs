@@ -12,9 +12,11 @@ use rand::Rng;
 use crate::{
     player::{Dog, DOG_SPEED},
     sheep::{
-        Decision, GoTo, IdleFeeding, IsScared, Sheep, RANDOM_WALK_SPEED_MULTIPLIER, SHEEP_SPEED, StartSheepCount,
+        Decision, GoTo, IdleFeeding, IsScared, Sheep, StartSheepCount,
+        RANDOM_WALK_SPEED_MULTIPLIER, SHEEP_SPEED,
     },
-    test_level::LevelSize, GameState, GameSet,
+    test_level::LevelSize,
+    GameSet, GameState,
 };
 
 pub struct StorytellerPlugin;
@@ -27,9 +29,15 @@ impl Plugin for StorytellerPlugin {
             next_wave: None,
         })
         .init_resource::<Score>()
-        .add_systems(Update, (storyteller_system, level_timer).in_set(GameSet::Playing))
+        .add_systems(
+            Update,
+            (storyteller_system, level_timer).in_set(GameSet::Playing),
+        )
         .add_systems(OnEnter(GameState::Playing), setup_start_time)
-        .add_systems(FixedUpdate, (score_system, fail_system).in_set(GameSet::Playing));
+        .add_systems(
+            FixedUpdate,
+            (score_system, fail_system).in_set(GameSet::Playing),
+        );
     }
 }
 
@@ -50,11 +58,7 @@ pub struct Storyteller {
 #[derive(Resource, Default)]
 pub struct Score(pub f32);
 
-fn setup_start_time(
-    mut commands: Commands,
-    mut teller: ResMut<Storyteller>, 
-    time: Res<Time>) 
-{
+fn setup_start_time(mut commands: Commands, mut teller: ResMut<Storyteller>, time: Res<Time>) {
     commands.remove_resource::<FailReason>();
     teller.level_start_time = time.elapsed_seconds();
 }
@@ -137,8 +141,8 @@ fn level_timer(
     mut timers: Query<&mut Text, With<LevelTimer>>,
     teller: Res<Storyteller>,
     time: Res<Time>,
-    mut next_state : ResMut<NextState<GameState>>,
-    score : Res<Score>
+    mut next_state: ResMut<NextState<GameState>>,
+    score: Res<Score>,
 ) {
     for mut timer in timers.iter_mut() {
         let level_time = time.elapsed_seconds() - teller.level_start_time;
@@ -148,8 +152,7 @@ fn level_timer(
             let time = format!("{:02}:{:02}", dur.as_secs() / 60, dur.as_secs() % 60);
             let score_text = format!("Score: {:.1}", score.0);
 
-            timer.sections[0].value =
-                format!("{}\n{}", time, score_text);
+            timer.sections[0].value = format!("{}\n{}", time, score_text);
         } else {
             timer.sections[0].value = format!("{:02}:{:02}", 0, 0);
             next_state.set(GameState::Finish);
@@ -158,7 +161,7 @@ fn level_timer(
 }
 
 fn score_system(
-    mut score : ResMut<Score>,
+    mut score: ResMut<Score>,
     mut alived_sheep: Query<&Sheep>,
     mut teller: ResMut<Storyteller>,
     time: Res<Time>,
@@ -170,7 +173,7 @@ fn score_system(
 
 fn fail_system(
     mut commands: Commands,
-    mut next_state : ResMut<NextState<GameState>>,
+    mut next_state: ResMut<NextState<GameState>>,
     alived_sheep: Query<&Sheep>,
     start_sheep_count: Res<StartSheepCount>,
 ) {
@@ -183,5 +186,5 @@ fn fail_system(
 #[derive(Resource)]
 pub enum FailReason {
     SheepDied,
-    TaskFailed
+    TaskFailed,
 }

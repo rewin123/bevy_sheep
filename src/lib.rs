@@ -2,7 +2,9 @@
 
 pub mod common_storage;
 pub mod debug_diagnostic;
+pub mod finish_screen;
 pub mod level_ui;
+pub mod menu;
 pub mod physics;
 pub mod player;
 pub mod safe_area;
@@ -12,15 +14,13 @@ pub mod storyteller;
 pub mod test_level;
 pub mod torch;
 pub mod wolf;
-pub mod menu;
-pub mod finish_screen;
 
 use std::f32::consts::PI;
 
-use bevy::{app::App, core_pipeline::clear_color::ClearColorConfig};
 #[cfg(debug_assertions)]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
+use bevy::{app::App, core_pipeline::clear_color::ClearColorConfig};
 
 // This example game uses States to separate logic
 // See https://bevy-cheatbook.github.io/programming/states.html
@@ -54,15 +54,30 @@ impl Plugin for GamePlugin {
         app.add_state::<GameState>();
 
         //Terrible set configuration
-        app.configure_sets(Update, GameSet::Loading.run_if(in_state(GameState::Loading)));
+        app.configure_sets(
+            Update,
+            GameSet::Loading.run_if(in_state(GameState::Loading)),
+        );
         app.configure_sets(Update, GameSet::Menu.run_if(in_state(GameState::Menu)));
-        app.configure_sets(Update, GameSet::Playing.run_if(in_state(GameState::Playing)));
+        app.configure_sets(
+            Update,
+            GameSet::Playing.run_if(in_state(GameState::Playing)),
+        );
         app.configure_sets(Update, GameSet::Finish.run_if(in_state(GameState::Finish)));
 
-        app.configure_sets(FixedUpdate, GameSet::Loading.run_if(in_state(GameState::Loading)));
+        app.configure_sets(
+            FixedUpdate,
+            GameSet::Loading.run_if(in_state(GameState::Loading)),
+        );
         app.configure_sets(FixedUpdate, GameSet::Menu.run_if(in_state(GameState::Menu)));
-        app.configure_sets(FixedUpdate, GameSet::Playing.run_if(in_state(GameState::Playing)));
-        app.configure_sets(FixedUpdate, GameSet::Finish.run_if(in_state(GameState::Finish)));
+        app.configure_sets(
+            FixedUpdate,
+            GameSet::Playing.run_if(in_state(GameState::Playing)),
+        );
+        app.configure_sets(
+            FixedUpdate,
+            GameSet::Finish.run_if(in_state(GameState::Finish)),
+        );
 
         #[cfg(debug_assertions)]
         {
@@ -83,13 +98,16 @@ impl Plugin for GamePlugin {
             level_ui::LevelUiPlugin,
             wolf::WolfPlugin,
             menu::MenuPlugin,
-            finish_screen::FinishScreenPlugin
+            finish_screen::FinishScreenPlugin,
         ));
 
         //For long term updates
         app.insert_resource(Time::<Fixed>::from_seconds(1.0));
 
-        app.add_systems(OnEnter(GameState::Playing), (test_level::setup, sheep::setup));
+        app.add_systems(
+            OnEnter(GameState::Playing),
+            (test_level::setup, sheep::setup),
+        );
 
         app.add_systems(Startup, (loading, camera_setup));
 
@@ -101,15 +119,11 @@ pub fn get_sprite_rotation() -> Quat {
     Quat::from_euler(EulerRot::XYZ, -PI / 2.0 - PI / 4.0, 0.0, 0.0)
 }
 
-fn loading(
-    mut next_state : ResMut<NextState<GameState>>
-) {
+fn loading(mut next_state: ResMut<NextState<GameState>>) {
     next_state.set(GameState::Menu);
 }
 
-fn camera_setup(
-    mut commands : Commands,
-) {
+fn camera_setup(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 30.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
         camera: Camera {
@@ -127,10 +141,7 @@ fn camera_setup(
 #[derive(Component)]
 pub struct GameStuff;
 
-fn clear_game_stuff(
-    mut commands : Commands,
-    game_stuff : Query<Entity, With<GameStuff>>,
-) {
+fn clear_game_stuff(mut commands: Commands, game_stuff: Query<Entity, With<GameStuff>>) {
     for entity in game_stuff.iter() {
         commands.entity(entity).despawn_recursive();
     }

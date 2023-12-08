@@ -12,7 +12,8 @@ use crate::{
     player::{Bark, Dog, DOG_SPEED},
     safe_area::SafeArea,
     sprite_material::create_plane_mesh,
-    test_level::LevelSize, GameSet, GameStuff,
+    test_level::LevelSize,
+    GameSet, GameStuff,
 };
 
 use bevy_spatial::{
@@ -24,7 +25,7 @@ const SHEEP_PATH: &str = "test/sheep.png";
 pub const SHEEP_SPEED: f32 = DOG_SPEED * 0.5;
 const SHEEP_ACCELERATION: f32 = SHEEP_SPEED * 3.0;
 
-const RANDOM_WALK_RANGE: f32 =  2.0;
+const RANDOM_WALK_RANGE: f32 = 2.0;
 const RANDOM_WALK_ACCEPT_RADIUS: f32 = 0.5;
 pub const RANDOM_WALK_SPEED_MULTIPLIER: f32 = 0.3;
 
@@ -43,7 +44,10 @@ impl Plugin for SheepPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<StateChance>();
 
-        app.add_systems(Update, (scared_sheeps, update_scared_sheeps).in_set(GameSet::Playing));
+        app.add_systems(
+            Update,
+            (scared_sheeps, update_scared_sheeps).in_set(GameSet::Playing),
+        );
 
         app.add_systems(Update, (sheep_state,).in_set(GameSet::Playing));
 
@@ -385,7 +389,8 @@ pub fn update_scared_sheeps(
                 }
             }
 
-            let speed_amount = (SHEEP_SPEED * (1.0 - dog_distance / SCARE_MAX_DIST) + SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER)
+            let speed_amount = (SHEEP_SPEED * (1.0 - dog_distance / SCARE_MAX_DIST)
+                + SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER)
                 .max(SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER);
 
             if dog_distance < SCARE_MAX_DIST {
@@ -542,8 +547,13 @@ fn collect_field(
                     let dist_force = 10.0 * distance_force;
                     let dz = Vec3::new(0.0, 0.0, sum_dz);
 
-                    let wsum = vel.0.length() + mean_targets.length() + dist_force.length() + dz.length();
-                    let max_length = vel.0.length().max(mean_targets.length()).max(dist_force.length());
+                    let wsum =
+                        vel.0.length() + mean_targets.length() + dist_force.length() + dz.length();
+                    let max_length = vel
+                        .0
+                        .length()
+                        .max(mean_targets.length())
+                        .max(dist_force.length());
                     walk.target_velocity =
                         (vel.0 + dist_force + mean_targets + dz) / (wsum + 0.000001) * max_length;
                 } else {

@@ -18,7 +18,10 @@ impl Plugin for DiagnosticPlugin {
             )
                 .chain(),
         )
-        .add_systems(Update, (fps_counting, sheep_counter_text).in_set(GameSet::Playing));
+        .add_systems(
+            Update,
+            (fps_counting, sheep_counter_text).in_set(GameSet::Playing),
+        );
 
         #[cfg(debug_assertions)]
         {
@@ -95,9 +98,12 @@ pub fn setup_sheep_counter(mut commands: Commands, panels: Query<Entity, With<Di
 pub fn sheep_counter_text(
     mut query: Query<&mut Text, With<ShipDebugCounter>>,
     sheep_counter: Res<SheepCounter>,
-    start_sheep_count: Res<StartSheepCount>
+    start_sheep_count: Res<StartSheepCount>,
 ) {
     for mut text in &mut query {
-        text.sections[0].value = format!("Sheep in safe area: {}/{}", sheep_counter.count, start_sheep_count.0);
+        text.sections[0].value = format!(
+            "Sheep in safe area: {}/{}",
+            sheep_counter.count, start_sheep_count.0
+        );
     }
 }

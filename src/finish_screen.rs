@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::{GameState, storyteller::{Score, FailReason}, GameSet};
+use crate::{
+    storyteller::{FailReason, Score},
+    GameSet, GameState,
+};
 
 pub struct FinishScreenPlugin;
 
@@ -16,11 +19,7 @@ impl Plugin for FinishScreenPlugin {
 #[derive(Component)]
 struct FinishScreen;
 
-fn setup_finish_screen(
-    mut commands: Commands,
-    score : Res<Score>,
-    fail : Option<Res<FailReason>>
-) {
+fn setup_finish_screen(mut commands: Commands, score: Res<Score>, fail: Option<Res<FailReason>>) {
     let mut text_style = TextStyle::default();
     text_style.font_size = 24.0;
 
@@ -71,10 +70,7 @@ fn setup_finish_screen(
     });
 }
 
-fn cleanup_finish_screen(
-    mut commands: Commands,
-    query: Query<Entity, With<FinishScreen>>
-) {
+fn cleanup_finish_screen(mut commands: Commands, query: Query<Entity, With<FinishScreen>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn_recursive();
     }
@@ -82,7 +78,10 @@ fn cleanup_finish_screen(
 
 fn finish_screen_system(
     mut next_state: ResMut<NextState<GameState>>,
-    mut interaction_query: Query<(&Interaction, &mut BackgroundColor), (Changed<Interaction>, With<Button>)>,
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor),
+        (Changed<Interaction>, With<Button>),
+    >,
 ) {
     for (interaction, mut color) in interaction_query.iter_mut() {
         match *interaction {

@@ -88,33 +88,33 @@ pub fn setup(
             continue;
         }
 
-        commands.spawn(PbrBundle {
-            mesh: square.clone(),
-            material: tree_material.clone(),
-            transform: Transform::from_xyz(pos.x, pos.y, pos.z)
-                .with_rotation(get_sprite_rotation())
-                .with_scale(Vec3::new(2.5, 2.6, 5.0)),
-            ..default()
-        }).insert(
-            GameStuff
-        );
+        commands
+            .spawn(PbrBundle {
+                mesh: square.clone(),
+                material: tree_material.clone(),
+                transform: Transform::from_xyz(pos.x, pos.y, pos.z)
+                    .with_rotation(get_sprite_rotation())
+                    .with_scale(Vec3::new(2.5, 2.6, 5.0)),
+                ..default()
+            })
+            .insert(GameStuff);
     }
 
     //green plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane {
-            size: tree_r * 2.0,
+    commands
+        .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Plane {
+                size: tree_r * 2.0,
+                ..default()
+            })),
+            material: materials.add(StandardMaterial {
+                base_color: Color::hex("5d9669").unwrap(),
+                ..default()
+            }),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..default()
-        })),
-        material: materials.add(StandardMaterial {
-            base_color: Color::hex("5d9669").unwrap(),
-            ..default()
-        }),
-        transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        ..default()
-    }).insert(
-        GameStuff
-    );
+        })
+        .insert(GameStuff);
 
     spawn_player_event.send(SpawnPlayer {
         position: Vec3::new(-r - 2.0, 0.0, 0.0),
@@ -128,10 +128,12 @@ pub fn setup(
         spawn_torch.send(SpawnTorch { position: pos });
     }
 
-    commands.spawn(SafeArea::Rect {
-        pos: Vec2::ZERO,
-        size: Vec2::new(r * 1.5, r * 1.5),
-    }).insert(GameStuff);
+    commands
+        .spawn(SafeArea::Rect {
+            pos: Vec2::ZERO,
+            size: Vec2::new(r * 1.5, r * 1.5),
+        })
+        .insert(GameStuff);
 
     create_level_ui.send(CreateLevelUi);
 }
