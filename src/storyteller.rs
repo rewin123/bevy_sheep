@@ -68,7 +68,7 @@ fn storyteller_system(
 
         let c = sheep_count * unfiorm_time * 0.2 + 1.0 + 0.05 * sheep_count;
         let dt = 10.0 - 3.0 * unfiorm_time;
-        let n = 2.0 + 2.0 * unfiorm_time;
+        let n = 1.0 + 2.0 * unfiorm_time;
 
         teller.next_wave = Some(SheepWave {
             count: c as usize,

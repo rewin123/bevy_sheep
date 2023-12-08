@@ -359,7 +359,7 @@ pub fn update_scared_sheeps(
     };
 
     for (e, t, mut walk, mut dec, mut scare) in sheeps.iter_mut() {
-        if scare.time > 2. {
+        if scare.time > 4. {
             *dec = Decision::Feed;
             walk.0 = Vec3::ZERO;
             commands.entity(e).remove::<IsScared>().insert(IdleFeeding {
@@ -384,7 +384,7 @@ pub fn update_scared_sheeps(
                 }
             }
 
-            let speed_amount = (SHEEP_SPEED * (1.0 - dog_distance / SCARE_MAX_DIST)).max(0.0_f32);
+            let speed_amount = (SHEEP_SPEED * (1.0 - dog_distance / SCARE_MAX_DIST) + SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER).max(0.0_f32);
 
             if let Some(sa) = nearest_sa {
                 let dir_to_sa = (sa.get_center() - t.translation).normalize_or_zero();
@@ -473,7 +473,7 @@ fn idle_feeding_system(
 
 type NNTree = KDTree3<Sheep>;
 
-const PREFERED_DISTANCE: f32 = 1.3;
+const PREFERED_DISTANCE: f32 = 0.7;
 const PREFERED_DY: f32 = 0.1;
 
 fn collect_field(
@@ -524,7 +524,7 @@ fn collect_field(
                     let around_mean_vel = sum / (count as f32);
                     let dv = around_mean_vel - vel.0;
                     walk.target_velocity =
-                        vel.0 + 0.9 * distance_force + Vec3::new(0.0, 0.0, sum_dz);
+                        vel.0 + 10.0 * distance_force + Vec3::new(0.0, 0.0, sum_dz);
                 } else {
                     walk.target_velocity = vel.0;
                 }
