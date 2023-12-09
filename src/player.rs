@@ -168,7 +168,7 @@ pub fn bark(
         return;
     };
 
-    if input.pressed(KeyCode::Space) {
+    if input.just_pressed(KeyCode::Space) {
         event_writer.send(Bark {
             radius: 10.,
             position: bark.translation,
