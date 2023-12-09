@@ -4,8 +4,8 @@ use crate::{player::{DOG_SPEED, DOG_ACCELERATION}, common_storage::CommonStorage
 
 const SHEPHERD_PATH: &str = "test/Knight.png";
 
-const SHEPHERD_SPEED: f32 = DOG_SPEED;
-const SHEPHERD_ACCEL: f32 = DOG_ACCELERATION;
+const SHEPHERD_SPEED: f32 = DOG_SPEED * 0.5;
+const SHEPHERD_ACCEL: f32 = DOG_ACCELERATION * 0.5;
 
 const IGNITE_RADIUS: f32 = 5.0;
 
