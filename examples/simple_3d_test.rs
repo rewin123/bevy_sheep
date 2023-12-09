@@ -79,7 +79,7 @@ fn setup(
         ..default()
     });
 
-    //spawn ships
+    //spawn sheeps
     let r = 50.0;
     let mut rng = rand::thread_rng();
     let sheep_count = 2000;

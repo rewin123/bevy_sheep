@@ -3,7 +3,7 @@ use std::{
     time::Duration,
 };
 
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::{
@@ -156,7 +156,7 @@ impl StateChance {
                 return *d;
             }
         }
-        return Decision::Idle;
+        Decision::Idle
     }
 }
 
@@ -268,14 +268,13 @@ fn init_safeareawalk_walk(
 pub fn sheep_state(
     mut commands: Commands,
     state_matrix: Res<StateChance>,
-    time: Res<Time>,
-    mut sheeps: Query<(Entity, &mut Decision, &mut Sheep), Without<IsScared>>,
+    mut sheeps: Query<(Entity, &mut Decision, &Sheep), Without<IsScared>>,
     mut init_random_walk: EventWriter<InitRandomWalk>,
     mut init_safe_walk: EventWriter<SafeAreaWalk>,
     mut init_escape_walk: EventWriter<EscapeWalk>,
 ) {
     let mut rand = rand::thread_rng();
-    for (e, mut dec, mut sheep) in &mut sheeps.iter_mut() {
+    for (e, mut dec, _sheep) in &mut sheeps.iter_mut() {
         if *dec == Decision::Idle {
             let next_dec = state_matrix.select_next(&mut rand);
 

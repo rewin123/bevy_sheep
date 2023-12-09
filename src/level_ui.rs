@@ -19,7 +19,7 @@ pub struct LevelUi;
 
 fn create_level_ui_system(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    _asset_server: Res<AssetServer>,
     mut ev_create_level_ui: EventReader<CreateLevelUi>,
 ) {
     if ev_create_level_ui.is_empty() {

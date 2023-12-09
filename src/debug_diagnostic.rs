@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 
-use crate::{safe_area::SheepCounter, sheep::StartSheepCount, GameSet, GameState, GameStuff};
+use crate::{
+    safe_area::SheepCounter,
+    sheep::{Sheep, StartSheepCount},
+    GameSet, GameState, GameStuff,
+};
 
 const FONT_SIZE: f32 = 24.0;
 
@@ -15,15 +19,16 @@ impl Plugin for DiagnosticPlugin {
                 apply_deferred,
                 setup_counter,
                 setup_sheep_counter,
+                setup_alive_sheep_counter,
             )
                 .chain(),
         )
         .add_systems(
             Update,
-            (fps_counting, sheep_counter_text).in_set(GameSet::Playing),
+            (fps_counting, sheep_counter_text, alive_sheep_counter).in_set(GameSet::Playing),
         );
 
-        #[cfg(debug_assertions)]
+        #[cfg(feature = "dev")]
         {
             app.add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::default());
         }
@@ -80,14 +85,14 @@ fn fps_counting(mut query: Query<&mut Text, With<FrameCounter>>, time: Res<Time>
 }
 
 #[derive(Component)]
-pub struct ShipDebugCounter;
+pub struct SheepDebugCounter;
 
 pub fn setup_sheep_counter(mut commands: Commands, panels: Query<Entity, With<DiagnosticPanel>>) {
     let mut text_style = TextStyle::default();
     text_style.font_size = FONT_SIZE;
     let sheep_counter = commands
         .spawn(TextBundle::from_section("Sheep in safe area: ", text_style))
-        .insert(ShipDebugCounter)
+        .insert(SheepDebugCounter)
         .id();
 
     if let Ok(panel) = panels.get_single() {
@@ -96,7 +101,7 @@ pub fn setup_sheep_counter(mut commands: Commands, panels: Query<Entity, With<Di
 }
 
 pub fn sheep_counter_text(
-    mut query: Query<&mut Text, With<ShipDebugCounter>>,
+    mut query: Query<&mut Text, With<SheepDebugCounter>>,
     sheep_counter: Res<SheepCounter>,
     start_sheep_count: Res<StartSheepCount>,
 ) {
@@ -104,6 +109,39 @@ pub fn sheep_counter_text(
         text.sections[0].value = format!(
             "Sheep in safe area: {}/{}",
             sheep_counter.count, start_sheep_count.0
+        );
+    }
+}
+
+#[derive(Component)]
+pub struct SheepAliveDebugCounter;
+
+pub fn setup_alive_sheep_counter(
+    mut commands: Commands,
+    panels: Query<Entity, With<DiagnosticPanel>>,
+) {
+    let mut text_style = TextStyle::default();
+    text_style.font_size = FONT_SIZE;
+    let sheep_counter = commands
+        .spawn(TextBundle::from_section("Alive sheeps: ", text_style))
+        .insert(SheepAliveDebugCounter)
+        .id();
+
+    if let Ok(panel) = panels.get_single() {
+        commands.entity(panel).add_child(sheep_counter);
+    }
+}
+
+pub fn alive_sheep_counter(
+    mut query: Query<&mut Text, With<SheepAliveDebugCounter>>,
+    sheeps: Query<&Sheep>,
+    start_sheep_count: Res<StartSheepCount>,
+) {
+    let alive_sheep_count = sheeps.iter().count();
+    for mut text in &mut query {
+        text.sections[0].value = format!(
+            "Alive sheeps: {}/{}",
+            alive_sheep_count, start_sheep_count.0
         );
     }
 }

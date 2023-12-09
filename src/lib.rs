@@ -17,7 +17,7 @@ pub mod wolf;
 
 use std::f32::consts::PI;
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "dev")]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::{app::App, core_pipeline::clear_color::ClearColorConfig};
@@ -79,7 +79,7 @@ impl Plugin for GamePlugin {
             GameSet::Finish.run_if(in_state(GameState::Finish)),
         );
 
-        #[cfg(debug_assertions)]
+        #[cfg(feature = "dev")]
         {
             app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
         }
