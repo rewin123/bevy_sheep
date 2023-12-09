@@ -37,7 +37,8 @@ impl Plugin for StorytellerPlugin {
         .add_systems(
             FixedUpdate,
             (score_system, fail_system).in_set(GameSet::Playing),
-        );
+        )
+        .add_state::<GlobalTask>();
     }
 }
 
@@ -187,4 +188,20 @@ fn fail_system(
 pub enum FailReason {
     SheepDied,
     TaskFailed,
+}
+
+
+pub enum TaskStatus {
+    Active,
+    Done,
+    Failed
+}
+
+#[derive(States, Debug, Clone, Eq, PartialEq, Hash, Default)]
+pub enum GlobalTask {
+    #[default]
+    None,
+    SheepEscape,
+    WolfAttack,
+    CollectSheepInArea,
 }
