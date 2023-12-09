@@ -25,6 +25,7 @@ impl Plugin for WolfPlugin {
                 catch_system,
                 eating_system,
                 go_out_system,
+                run_out_system,
                 bark,
                 apply_deferred,
             )
@@ -110,19 +111,11 @@ fn catch_system(
     mut commands: Commands,
     sheep: Query<&Transform>,
     mut wolfs: Query<(Entity, &Transform, &mut WalkController, &TryToCatchSheep)>,
-    safearea: Query<&SafeArea>,
 ) {
     for (wolf, wolf_transform, mut walk_controller, try_to_catch_sheep) in wolfs.iter_mut() {
         let wolf_translation = wolf_transform.translation;
         if let Ok(sheep) = sheep.get(try_to_catch_sheep.target) {
-            if wolf_translation.distance(sheep.translation) < 1.0
-                || !safearea.iter().any(|area| {
-                    area.in_area(Vec2 {
-                        x: sheep.translation.x,
-                        y: sheep.translation.z,
-                    })
-                })
-            {
+            if wolf_translation.distance(sheep.translation) < 1.0 {
                 commands
                     .entity(wolf)
                     .insert(Eating { time: 10.0 })
@@ -146,12 +139,10 @@ fn eating_system(
     mut commands: Commands,
     time: Res<Time>,
     mut wolfs: Query<(Entity, &Transform, &mut Eating, &mut WalkController)>,
-    safearea: Query<&SafeArea>,
 ) {
     for (wolf, wolf_transform, mut eating, mut walk_controller) in wolfs.iter_mut() {
         eating.time -= time.delta_seconds();
-        if eating.time <= 0.0
-        {
+        if eating.time <= 0.0 {
             commands.entity(wolf).remove::<Eating>().insert(GoOut);
         } else {
             walk_controller.target_velocity = Vec3::ZERO;
@@ -178,6 +169,26 @@ fn go_out_system(
                 y: wolf_transform.translation.z,
             })
         }) {
+            commands.entity(wolf).insert(GoOut);
+        }
+    }
+}
+
+fn run_out_system(
+    mut commands: Commands,
+    mut wolfs: Query<(Entity, &Transform, &mut WalkController), (With<Wolf>, Without<GoOut>)>,
+    safearea: Query<&SafeArea>,
+) {
+    for (wolf, wolf_transform, mut walk_controller) in wolfs.iter_mut() {
+        let in_safe_area = safearea.iter().filter(|area| {
+            area.in_area(Vec2 {
+                x: wolf_transform.translation.x,
+                y: wolf_transform.translation.z,
+            })
+        });
+        if let Some(area) = in_safe_area.last() {
+            walk_controller.target_velocity =
+                (wolf_transform.translation - area.get_center()).normalize() * WOLF_SPEED;
             commands.entity(wolf).insert(GoOut);
         }
     }

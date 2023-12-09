@@ -24,7 +24,7 @@ fn setup_finish_screen(mut commands: Commands, score: Res<Score>, fail: Option<R
     text_style.font_size = 24.0;
 
     commands.spawn((FinishScreen, NodeBundle {
-        style : Style { 
+        style: Style {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
             justify_content: JustifyContent::Center,

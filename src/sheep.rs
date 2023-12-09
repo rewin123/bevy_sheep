@@ -156,7 +156,7 @@ impl StateChance {
                 return *d;
             }
         }
-        return Decision::Idle;
+        Decision::Idle
     }
 }
 
