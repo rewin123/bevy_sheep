@@ -2,10 +2,10 @@
 
 use std::f32::consts::PI;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, transform::commands};
 use rand::Rng;
 
-use crate::sheep::Sheep;
+use crate::{sheep::Sheep, storyteller::Storyteller};
 
 pub struct SafeAreaPlugin;
 
@@ -19,11 +19,17 @@ impl Plugin for SafeAreaPlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub enum SafeArea {
-    Rect { pos: Vec2, size: Vec2 },
-    Ellipse { pos1: Vec2, pos2: Vec2, radius: f32 },
+    Rect { pos: Vec2, size: Vec2},
+    Ellipse { pos1: Vec2, pos2: Vec2, radius: f32},
+    Circle { pos: Vec2, radius: f32},
 }
+
+#[derive(Component)]
+pub struct LandSafeArea {
+    pub start_area: SafeArea,
+} //Mark for day safe area
 
 impl SafeArea {
     pub fn in_area(&self, sheep_pos: Vec2) -> bool {
@@ -42,6 +48,9 @@ impl SafeArea {
                 let d = (*pos1 - *pos2).length();
                 let r = (*pos1 - sheep_pos).length();
                 r * r <= d * d
+            }
+            SafeArea::Circle { pos, radius } => {
+                (*pos - sheep_pos).length() < *radius
             }
         }
     }
@@ -70,11 +79,41 @@ impl SafeArea {
                 pos2,
                 radius: _,
             } => Vec3::new((pos1.x + pos2.x) / 2.0, 0.0, (pos1.y + pos2.y) / 2.0),
+            SafeArea::Circle { pos, radius } => {
+                Vec3::new(pos.x, 0.0, pos.y)
+            }
+        }
+    }
+
+    pub fn get_scaled(&self, scale: f32) -> SafeArea {
+        match self {
+            SafeArea::Rect { pos, size } => {
+                SafeArea::Rect {
+                    pos: *pos,
+                    size: *size * scale,
+                }
+            }
+            SafeArea::Ellipse { pos1, pos2, radius } => {
+                SafeArea::Ellipse {
+                    pos1: *pos1,
+                    pos2: *pos2,
+                    radius: *radius * scale,
+                }
+            },
+            SafeArea::Circle { pos, radius } => {
+                SafeArea::Circle {
+                    pos: *pos,
+                    radius: *radius * scale,
+                }
+            },
         }
     }
 }
 
-fn draw_safe_area(mut gizmos: Gizmos, query: Query<&SafeArea>) {
+#[derive(Component)]
+pub struct HiddenSafeArea;
+
+fn draw_safe_area(mut gizmos: Gizmos, query: Query<&SafeArea, Without<HiddenSafeArea>>) {
     for safe_area in query.iter() {
         match safe_area {
             SafeArea::Rect { pos, size } => {
@@ -90,6 +129,9 @@ fn draw_safe_area(mut gizmos: Gizmos, query: Query<&SafeArea>) {
                 pos2: _,
                 radius: _,
             } => {}
+            SafeArea::Circle { pos, radius } => {
+                gizmos.circle(Vec3::new(pos.x, 0.001, pos.y), Vec3::Y, *radius, Color::ORANGE);
+            }
         }
     }
 }
@@ -109,14 +151,18 @@ fn count_sheeps(
     mut counter: ResMut<SheepCounter>,
 ) {
     let mut count = 0;
-    for safe_area in safe_areas.iter() {
-        for (e, sheep) in sheep.iter() {
+    for (e, sheep) in sheep.iter() {
+        let mut in_safe = false;
+        for safe_area in safe_areas.iter() {
             if safe_area.in_area(Vec2::new(sheep.translation.x, sheep.translation.z)) {
-                count += 1;
-                commands.entity(e).remove::<OutOfSafeArea>();
-            } else {
-                commands.entity(e).insert(OutOfSafeArea);
+                in_safe = true;
             }
+        }
+        if in_safe {
+            count += 1;
+            commands.entity(e).remove::<OutOfSafeArea>();
+        } else {
+            commands.entity(e).insert(OutOfSafeArea);
         }
     }
     counter.count = count;

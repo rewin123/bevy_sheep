@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use bevy::prelude::*;
 
-use crate::{storyteller::Storyteller, GameSet};
+use crate::{storyteller::Storyteller, GameSet, safe_area::{SafeArea, LandSafeArea}};
 
 pub struct SundayPlugin;
 
@@ -33,6 +33,9 @@ impl Plugin for SundayPlugin {
         app.add_systems(Update, sunday_system.in_set(GameSet::Playing));
         app.add_systems(Update, set_day_state.in_set(GameSet::Playing));
         app.add_state::<DayState>();
+
+        app.add_systems(Update, safe_area_evening_decrease.in_set(GameSet::Playing).run_if(in_state(DayState::Evening)));
+        app.add_systems(OnEnter(DayState::Night), delete_land_area_at_night);
     }
 }
 
@@ -115,5 +118,30 @@ fn sunday_system(
         ambient_light.brightness = AMBIENT_NIGHT_ILLUMINANCE * (1.0 - sun_falloff) + sun_falloff * AMBIENT_DAY_ILLUMINANCE;
     } else {
         
+    }
+}
+
+
+
+fn safe_area_evening_decrease(
+    mut areas : Query<(&mut SafeArea, &LandSafeArea)>,
+    time : Res<Time>,
+    teller : Res<Storyteller>
+) {
+    let uniform_time = teller.get_level_unfirom_time(&time);
+    let evening_time = (uniform_time - DAY_TIME) / (EVENING_TIME - DAY_TIME);
+    let scale = 1.0 - evening_time;
+    for (mut area, land_area) in areas.iter_mut() {
+        *area = land_area.start_area.get_scaled(scale);
+    }
+}
+
+
+fn delete_land_area_at_night(
+    mut commands: Commands,
+    mut areas : Query<Entity, With<LandSafeArea>>,
+) {
+    for entity in areas.iter_mut() {
+        commands.entity(entity).despawn_recursive();
     }
 }

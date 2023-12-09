@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 
-use crate::{common_storage::CommonStorage, get_sprite_rotation, GameStuff, GameSet};
+use crate::{common_storage::CommonStorage, get_sprite_rotation, GameStuff, GameSet, safe_area::{SafeArea, HiddenSafeArea}};
 
 const TORCH_PATH: &str = "test/torch.png";
 
-const TORCH_ILLUMINATION: f32 = 1000.0;
+const TORCH_ILLUMINATION: f32 = 10000.0;
 
 
 pub struct TorchPlugin;
@@ -62,25 +62,35 @@ fn spawn_torch(
 ) {
     for event in events.read() {
 
-        let light_id = commands.spawn(PointLightBundle {
-            point_light: PointLight {
+        let torch_radius = 10.0;
+        let smooth_radius = torch_radius + 0.01;
+        let light_height = torch_radius * 0.5;
+
+        let outer_spot_angle = ((torch_radius / light_height) as f32).atan();
+        let inner_spot_angle =  outer_spot_angle * 0.95;
+
+        let light_id = commands.spawn(SpotLightBundle {
+            spot_light: SpotLight {
                 color: Color::ORANGE,
                 intensity: 0.0,
-                range: 20.0,
-                radius: 0.3,
+                radius: 0.0,
+                range: torch_radius * 10.0,
                 shadows_enabled: false,
+                inner_angle: inner_spot_angle,
+                outer_angle: outer_spot_angle,
                 ..default()
             },
-            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
+            transform: Transform::from_translation(event.position + Vec3::Y * light_height).looking_at(event.position, Vec3::Z),
             ..default()
-        }).insert(TorchLight).id();
+        }).insert(TorchLight)
+        .insert(GameStuff).id();
 
         let torch = TorchBase {
             lit: false,
             fuel: 0.0,
             color: Color::ORANGE,
             max_fuel: 1.0,
-            radius: 20.0,
+            radius: torch_radius,
             light: light_id,
         };
 
@@ -96,7 +106,7 @@ fn spawn_torch(
                     ..default()
                 },
                 GameStuff,
-            )).add_child(light_id);
+            ));
     }
     events.clear();
 }
@@ -108,17 +118,22 @@ pub struct IgniteTorch {
 }
 
 fn ignite_torch(
+    mut commands : Commands,
     mut events: EventReader<IgniteTorch>,
-    mut query: Query<(&mut TorchBase, &Transform)>,
-    mut lights : Query<&mut PointLight, With<TorchLight>>
+    mut query: Query<(Entity, &mut TorchBase, &Transform)>,
+    mut lights : Query<&mut SpotLight, With<TorchLight>>
 ) {
     for event in events.read() {
-        for (mut torch, transform) in &mut query {
+        for (torch_e, mut torch, transform) in &mut query {
             if (transform.translation - event.position).length() < event.radius {
                 torch.lit = true;
                 torch.fuel = torch.max_fuel;
                 if let Ok(mut light) = lights.get_mut(torch.light) {
                     light.intensity = TORCH_ILLUMINATION;
+                    commands.entity(torch_e).insert(SafeArea::Circle { 
+                        pos: Vec2::new(transform.translation.x, transform.translation.z), 
+                        radius: torch.radius 
+                    }).insert(HiddenSafeArea);
                 };
             }
         }

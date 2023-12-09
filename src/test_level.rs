@@ -3,7 +3,7 @@ use rand::prelude::*;
 use std::f32::consts::PI;
 
 use crate::{
-    get_sprite_rotation, level_ui::CreateLevelUi, player::SpawnPlayer, safe_area::SafeArea,
+    get_sprite_rotation, level_ui::CreateLevelUi, player::SpawnPlayer, safe_area::{SafeArea, LandSafeArea},
     sprite_material::create_plane_mesh, torch::SpawnTorch, GameStuff, sunday::{DAY_SUN_COLOR, SUN_BASE_ILLUMINANCE, AMBIENT_BASE_ILLUMINANCE}, shepherd::SpawnShepherd,
 };
 
@@ -117,18 +117,22 @@ pub fn setup(
         position: Vec3::new(-r - 2.0, 0.0, 0.0),
     });
 
-    let num_of_torchs = 10;
-
+    let num_of_torchs = 20;
+    let torch_r = r / 2.0;
     for _ in 0..num_of_torchs {
-        let pos = Vec3::new(rng.gen_range(-r..r), 0.0, rng.gen_range(-r..r));
+        let pos = Vec3::new(rng.gen_range(-torch_r..torch_r), 0.0, rng.gen_range(-torch_r..torch_r));
 
         spawn_torch.send(SpawnTorch { position: pos });
     }
 
+    let safe_area = SafeArea::Rect {
+        pos: Vec2::ZERO,
+        size: Vec2::new(r * 1.5, r * 1.5),
+    };
     commands
-        .spawn(SafeArea::Rect {
-            pos: Vec2::ZERO,
-            size: Vec2::new(r * 1.5, r * 1.5),
+        .spawn(safe_area.clone())
+        .insert(LandSafeArea {
+            start_area : safe_area.clone()
         })
         .insert(GameStuff);
 
