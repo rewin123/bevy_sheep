@@ -196,20 +196,24 @@ fn run_out_system(
 
 fn bark(
     mut commands: Commands,
-    mut wolfs: Query<(Entity, &Transform), With<Wolf>>,
+    mut wolfs: Query<(Entity, &Transform, Option<&TryToCatchSheep>), With<Wolf>>,
     mut barks: EventReader<Bark>,
 ) {
     let Some(bark) = barks.read().next() else {
         return;
     };
 
-    for (wolf, wolf_transform) in wolfs.iter_mut() {
+    for (wolf, wolf_transform, catch) in wolfs.iter_mut() {
         if wolf_transform.translation.distance(bark.position) < bark.radius {
             commands
                 .entity(wolf)
                 .insert(GoOut)
                 .remove::<Eating>()
                 .remove::<TryToCatchSheep>();
+
+            if let Some(catch) = catch {
+                commands.entity(catch.target).remove::<UnderHunting>();
+            }
         }
     }
 }

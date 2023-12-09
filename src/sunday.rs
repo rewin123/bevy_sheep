@@ -35,7 +35,10 @@ const NIGHT_TIME: f32 = 0.7;
 impl Plugin for SundayPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, sunday_system.in_set(GameSet::Playing));
-        app.add_systems(Update, set_day_state.in_set(GameSet::Playing));
+        app.add_systems(
+            Update,
+            (set_day_state, set_episode_time).in_set(GameSet::Playing),
+        );
         app.add_state::<DayState>();
 
         app.add_systems(
@@ -45,8 +48,13 @@ impl Plugin for SundayPlugin {
                 .run_if(in_state(DayState::Evening)),
         );
         app.add_systems(OnEnter(DayState::Night), delete_land_area_at_night);
+
+        app.init_resource::<EpisodeTime>();
     }
 }
+
+#[derive(Resource, Default)]
+pub struct EpisodeTime(pub f32);
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum DayState {
@@ -74,6 +82,26 @@ fn set_day_state(
     } else if uniform_time < NIGHT_TIME {
         if *current_state != DayState::Night {
             state.set(DayState::Night);
+        }
+    }
+}
+
+fn set_episode_time(
+    mut episode: ResMut<EpisodeTime>,
+    time: Res<Time>,
+    teller: Res<Storyteller>,
+    day_state: Res<State<DayState>>,
+) {
+    let uniform_time = teller.get_level_unfirom_time(&time);
+    match *day_state.get() {
+        DayState::Day => {
+            episode.0 = uniform_time / DAY_TIME;
+        }
+        DayState::Evening => {
+            episode.0 = (uniform_time - DAY_TIME) / (EVENING_TIME - DAY_TIME);
+        }
+        DayState::Night => {
+            episode.0 = (uniform_time - EVENING_TIME) / (NIGHT_TIME - EVENING_TIME);
         }
     }
 }

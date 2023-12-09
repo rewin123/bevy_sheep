@@ -16,6 +16,7 @@ pub mod sunday;
 pub mod test_level;
 pub mod torch;
 pub mod wolf;
+pub mod global_task;
 
 use std::f32::consts::PI;
 
@@ -81,11 +82,6 @@ impl Plugin for GamePlugin {
             GameSet::Finish.run_if(in_state(GameState::Finish)),
         );
 
-        #[cfg(feature = "dev")]
-        {
-            app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
-        }
-
         app.add_plugins(debug_diagnostic::DiagnosticPlugin);
 
         app.add_plugins((
@@ -103,6 +99,7 @@ impl Plugin for GamePlugin {
             finish_screen::FinishScreenPlugin,
             sunday::SundayPlugin,
             shepherd::ShepherdPlugin,
+            global_task::GlobalTaskPlugin,
         ));
 
         //For long term updates

@@ -13,7 +13,7 @@ use crate::{
     safe_area::SafeArea,
     sprite_material::create_plane_mesh,
     test_level::LevelSize,
-    GameSet, GameStuff,
+    GameSet, GameStuff, global_task::sheep_escape::ShawshankRedemption,
 };
 
 use bevy_spatial::{
@@ -176,7 +176,8 @@ pub fn scared_sheeps(
                     .entity(sheep.0)
                     .insert(scare)
                     .remove::<IdleFeeding>()
-                    .remove::<GoTo>();
+                    .remove::<GoTo>()
+                    .remove::<ShawshankRedemption>();
                 *sheep.3 = Decision::Scared;
             }
         }
@@ -546,15 +547,17 @@ fn collect_field(
                     let dist_force = 10.0 * distance_force;
                     let dz = Vec3::new(0.0, 0.0, sum_dz);
 
-                    let wsum =
-                        vel.0.length() + mean_targets.length() + dist_force.length() + dz.length();
+                    let wsum = vel.0.length()
+                        + dist_force.length()
+                        + dz.length();
                     let max_length = vel
                         .0
                         .length()
                         .max(mean_targets.length())
                         .max(dist_force.length());
-                    walk.target_velocity =
-                        (vel.0 + dist_force + mean_targets + dz) / (wsum + 0.000001) * max_length;
+                    walk.target_velocity = (vel.0 + dist_force + dz)
+                        / (wsum + 0.000001)
+                        * max_length;
                 } else {
                     walk.target_velocity = vel.0;
                 }

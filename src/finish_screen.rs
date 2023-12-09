@@ -32,16 +32,16 @@ fn setup_finish_screen(mut commands: Commands, score: Res<Score>, fail: Option<R
             flex_direction: FlexDirection::Column,
             ..default()
         },
-        background_color: Color::rgba(0.15, 0.15, 0.15, 0.5).into(),
+        background_color: Color::rgba(0.15, 0.15, 0.15, 0.7).into(),
         ..default()
     })).with_children(|parent| {
         let text = if let Some(fail) = fail {
-            match *fail {
-                FailReason::SheepDied => "Uh-oh. \nWhat bad luck, half the sheep have been eaten, try again :( \nIf you escape from the vampire.",
-                FailReason::TaskFailed => "Uh-oh. \nYou failed the task, try again :( \nIf you escape from the vampire.",
+            match fail.as_ref() {
+                FailReason::SheepDied => format!("Uh-oh. \nWhat bad luck, half the sheep have been eaten, try again :( \nIf you escape from the vampire."),
+                FailReason::TaskFailed(reason) => format!("Uh-oh. \nYou failed the task, try again :(\nReason: {} \nIf you escape from the vampire.", reason),
             }
         } else {
-            "Congratulations! \nYou survived your workday! \nYou did well, the vampire is waiting for you tomorrow."
+            format!("Congratulations! \nYou survived your workday! \nYou did well, the vampire is waiting for you tomorrow.")
         };
 
         parent.spawn(TextBundle::from_section(
