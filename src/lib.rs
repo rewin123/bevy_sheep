@@ -14,6 +14,8 @@ pub mod storyteller;
 pub mod test_level;
 pub mod torch;
 pub mod wolf;
+pub mod sunday;
+pub mod shepherd;
 
 use std::f32::consts::PI;
 
@@ -99,6 +101,8 @@ impl Plugin for GamePlugin {
             wolf::WolfPlugin,
             menu::MenuPlugin,
             finish_screen::FinishScreenPlugin,
+            sunday::SundayPlugin,
+            shepherd::ShepherdPlugin,
         ));
 
         //For long term updates

@@ -4,7 +4,7 @@ use std::f32::consts::PI;
 
 use crate::{
     get_sprite_rotation, level_ui::CreateLevelUi, player::SpawnPlayer, safe_area::SafeArea,
-    sprite_material::create_plane_mesh, torch::SpawnTorch, GameStuff,
+    sprite_material::create_plane_mesh, torch::SpawnTorch, GameStuff, sunday::{DAY_SUN_COLOR, SUN_BASE_ILLUMINANCE, AMBIENT_BASE_ILLUMINANCE}, shepherd::SpawnShepherd,
 };
 
 const TREE_PATH: &str = "test/pine.png";
@@ -14,14 +14,11 @@ pub struct LevelSize(pub f32);
 
 impl Default for LevelSize {
     fn default() -> Self {
-        Self(40.)
+        Self(50.)
     }
 }
 
-pub const DAY_SUN_COLOR: &str = "f2ecbe";
-pub const EVENING_SUN_COLOR: &str = "cfaf56";
-pub const DUSK_SUN_COLOR: &str = "f2ecbe";
-pub const NIGHT_SUN_COLOR: &str = "f2ecbe";
+
 
 pub fn setup(
     mut commands: Commands,
@@ -32,6 +29,7 @@ pub fn setup(
     mut spawn_torch: EventWriter<SpawnTorch>,
     level_size: Res<LevelSize>,
     mut create_level_ui: EventWriter<CreateLevelUi>,
+    mut spawn_shepherd: EventWriter<SpawnShepherd>,
 ) {
     //spawn sun
     let mut cascades = CascadeShadowConfigBuilder::default();
@@ -41,7 +39,7 @@ pub fn setup(
         directional_light: DirectionalLight {
             shadows_enabled: true,
             color: Color::hex(DAY_SUN_COLOR).unwrap(),
-            illuminance: 50000.0,
+            illuminance: SUN_BASE_ILLUMINANCE,
             ..default()
         },
 
@@ -52,7 +50,7 @@ pub fn setup(
     //ambient ligjt
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
-        brightness: 1.0,
+        brightness: AMBIENT_BASE_ILLUMINANCE,
     });
 
     let square = meshes.add(create_plane_mesh());
@@ -73,7 +71,7 @@ pub fn setup(
     let cut_r = r + 5.0;
 
     let tree_area_size = PI * tree_r * tree_r - PI * cut_r * cut_r;
-    let tree_per_meter = 1.0;
+    let tree_per_meter = 0.5;
     let tree_count = (tree_area_size * tree_per_meter) as usize;
 
     for _ in 0..tree_count {
@@ -107,6 +105,7 @@ pub fn setup(
             })),
             material: materials.add(StandardMaterial {
                 base_color: Color::hex("5d9669").unwrap(),
+                reflectance: 0.05,
                 ..default()
             }),
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
@@ -132,6 +131,11 @@ pub fn setup(
             size: Vec2::new(r * 1.5, r * 1.5),
         })
         .insert(GameStuff);
+
+    spawn_shepherd.send(SpawnShepherd {
+        pos: Vec3::new(0.0, 0.0, -level_size.0),
+    });
+
 
     create_level_ui.send(CreateLevelUi);
 }

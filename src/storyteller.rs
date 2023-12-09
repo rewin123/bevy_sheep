@@ -56,6 +56,16 @@ pub struct Storyteller {
     pub next_wave: Option<SheepWave>,
 }
 
+impl Storyteller {
+    pub fn get_level_time(&self, time : &Time) -> f32 {
+        time.elapsed_seconds() - self.level_start_time
+    }
+
+    pub fn get_level_unfirom_time(&self, time : &Time) -> f32 {
+        self.get_level_time(time) / self.level_duration
+    }
+}
+
 #[derive(Resource, Default)]
 pub struct Score(pub f32);
 

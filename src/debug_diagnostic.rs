@@ -27,11 +27,6 @@ impl Plugin for DiagnosticPlugin {
             Update,
             (fps_counting, sheep_counter_text, alive_sheep_counter).in_set(GameSet::Playing),
         );
-
-        #[cfg(feature = "dev")]
-        {
-            app.add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::default());
-        }
     }
 }
 

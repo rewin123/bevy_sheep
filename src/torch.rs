@@ -1,8 +1,11 @@
 use bevy::prelude::*;
 
-use crate::{common_storage::CommonStorage, get_sprite_rotation, GameStuff};
+use crate::{common_storage::CommonStorage, get_sprite_rotation, GameStuff, GameSet};
 
 const TORCH_PATH: &str = "test/torch.png";
+
+const TORCH_ILLUMINATION: f32 = 1000.0;
+
 
 pub struct TorchPlugin;
 
@@ -10,12 +13,19 @@ impl Plugin for TorchPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnTorch>()
             .add_systems(Startup, setup_material)
-            .add_systems(Update, spawn_torch);
+            .add_systems(Update, spawn_torch)
+            
+            .add_event::<IgniteTorch>()
+            .add_systems(Update, ignite_torch.in_set(GameSet::Playing));
     }
 }
 
 #[derive(Component)]
-pub struct Torch {
+pub struct TorchLight;
+
+#[derive(Component)]
+pub struct TorchBase {
+    pub light : Entity,
     pub lit: bool,
     pub fuel: f32,
     pub color: Color,
@@ -51,12 +61,27 @@ fn spawn_torch(
     torch_material: Res<TorchMaterial>,
 ) {
     for event in events.read() {
-        let torch = Torch {
+
+        let light_id = commands.spawn(PointLightBundle {
+            point_light: PointLight {
+                color: Color::ORANGE,
+                intensity: 0.0,
+                range: 20.0,
+                radius: 0.3,
+                shadows_enabled: false,
+                ..default()
+            },
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
+            ..default()
+        }).insert(TorchLight).id();
+
+        let torch = TorchBase {
             lit: false,
             fuel: 0.0,
             color: Color::ORANGE,
             max_fuel: 1.0,
-            radius: 50.0,
+            radius: 20.0,
+            light: light_id,
         };
 
         commands
@@ -71,21 +96,32 @@ fn spawn_torch(
                     ..default()
                 },
                 GameStuff,
-            ))
-            .with_children(|parent| {
-                parent.spawn(PointLightBundle {
-                    point_light: PointLight {
-                        color: Color::ORANGE,
-                        intensity: 100.0,
-                        range: 5.0,
-                        radius: 0.3,
-                        shadows_enabled: false,
-                        ..default()
-                    },
-                    transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
-                    ..default()
-                });
-            });
+            )).add_child(light_id);
+    }
+    events.clear();
+}
+
+#[derive(Event)]
+pub struct IgniteTorch {
+    pub position: Vec3,
+    pub radius: f32,
+}
+
+fn ignite_torch(
+    mut events: EventReader<IgniteTorch>,
+    mut query: Query<(&mut TorchBase, &Transform)>,
+    mut lights : Query<&mut PointLight, With<TorchLight>>
+) {
+    for event in events.read() {
+        for (mut torch, transform) in &mut query {
+            if (transform.translation - event.position).length() < event.radius {
+                torch.lit = true;
+                torch.fuel = torch.max_fuel;
+                if let Ok(mut light) = lights.get_mut(torch.light) {
+                    light.intensity = TORCH_ILLUMINATION;
+                };
+            }
+        }
     }
     events.clear();
 }
