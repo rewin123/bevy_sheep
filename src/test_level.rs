@@ -1,6 +1,4 @@
-use bevy::{
-    core_pipeline::clear_color::ClearColorConfig, pbr::CascadeShadowConfigBuilder, prelude::*,
-};
+use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
 use rand::prelude::*;
 use std::f32::consts::PI;
 

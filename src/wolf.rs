@@ -5,7 +5,7 @@ use crate::{
     get_sprite_rotation,
     physics::{Velocity, WalkController},
     player::{Bark, DOG_SPEED},
-    safe_area::OutOfSafeArea,
+    safe_area::{OutOfSafeArea, SafeArea},
     test_level::LevelSize,
     GameStuff,
 };
@@ -25,6 +25,7 @@ impl Plugin for WolfPlugin {
                 catch_system,
                 eating_system,
                 go_out_system,
+                run_out_system,
                 bark,
                 apply_deferred,
             )
@@ -137,9 +138,9 @@ fn catch_system(
 fn eating_system(
     mut commands: Commands,
     time: Res<Time>,
-    mut wolfs: Query<(Entity, &mut Eating, &mut WalkController)>,
+    mut wolfs: Query<(Entity, &Transform, &mut Eating, &mut WalkController)>,
 ) {
-    for (wolf, mut eating, mut walk_controller) in wolfs.iter_mut() {
+    for (wolf, wolf_transform, mut eating, mut walk_controller) in wolfs.iter_mut() {
         eating.time -= time.delta_seconds();
         if eating.time <= 0.0 {
             commands.entity(wolf).remove::<Eating>().insert(GoOut);
@@ -151,15 +152,44 @@ fn eating_system(
 
 fn go_out_system(
     mut commands: Commands,
-    mut wolfs: Query<(Entity, &mut Transform, &mut WalkController, &GoOut)>,
+    mut wolfs: Query<(Entity, &Transform, &mut WalkController, &GoOut)>,
+    safearea: Query<&SafeArea>,
     level_size: Res<LevelSize>,
 ) {
-    for (wolf, mut wolf_transform, mut walk_controller, go_out) in wolfs.iter_mut() {
+    for (wolf, wolf_transform, mut walk_controller, _go_out) in wolfs.iter_mut() {
         let dir = wolf_transform.translation.normalize();
         walk_controller.target_velocity = dir * WOLF_SPEED;
 
         if wolf_transform.translation.distance(Vec3::ZERO) > level_size.0 * 3.0 {
             commands.entity(wolf).despawn_recursive();
+        }
+        if safearea.iter().any(|area| {
+            area.in_area(Vec2 {
+                x: wolf_transform.translation.x,
+                y: wolf_transform.translation.z,
+            })
+        }) {
+            commands.entity(wolf).insert(GoOut);
+        }
+    }
+}
+
+fn run_out_system(
+    mut commands: Commands,
+    mut wolfs: Query<(Entity, &Transform, &mut WalkController), (With<Wolf>, Without<GoOut>)>,
+    safearea: Query<&SafeArea>,
+) {
+    for (wolf, wolf_transform, mut walk_controller) in wolfs.iter_mut() {
+        let in_safe_area = safearea.iter().filter(|area| {
+            area.in_area(Vec2 {
+                x: wolf_transform.translation.x,
+                y: wolf_transform.translation.z,
+            })
+        });
+        if let Some(area) = in_safe_area.last() {
+            walk_controller.target_velocity =
+                (wolf_transform.translation - area.get_center()).normalize() * WOLF_SPEED;
+            commands.entity(wolf).insert(GoOut);
         }
     }
 }
@@ -169,7 +199,7 @@ fn bark(
     mut wolfs: Query<(Entity, &Transform), With<Wolf>>,
     mut barks: EventReader<Bark>,
 ) {
-    let Some(bark) = barks.iter().next() else {
+    let Some(bark) = barks.read().next() else {
         return;
     };
 

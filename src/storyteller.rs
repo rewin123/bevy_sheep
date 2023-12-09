@@ -146,7 +146,7 @@ fn level_timer(
 ) {
     for mut timer in timers.iter_mut() {
         let level_time = time.elapsed_seconds() - teller.level_start_time;
-        if (teller.level_duration - level_time > 0.0) {
+        if teller.level_duration - level_time > 0.0 {
             let dur = Duration::from_secs_f32(teller.level_duration - level_time);
 
             let time = format!("{:02}:{:02}", dur.as_secs() / 60, dur.as_secs() % 60);
