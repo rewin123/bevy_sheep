@@ -21,9 +21,9 @@ impl Plugin for SafeAreaPlugin {
 
 #[derive(Component, Clone)]
 pub enum SafeArea {
-    Rect { pos: Vec2, size: Vec2},
-    Ellipse { pos1: Vec2, pos2: Vec2, radius: f32},
-    Circle { pos: Vec2, radius: f32},
+    Rect { pos: Vec2, size: Vec2 },
+    Ellipse { pos1: Vec2, pos2: Vec2, radius: f32 },
+    Circle { pos: Vec2, radius: f32 },
 }
 
 #[derive(Component)]
@@ -49,9 +49,7 @@ impl SafeArea {
                 let r = (*pos1 - sheep_pos).length();
                 r * r <= d * d
             }
-            SafeArea::Circle { pos, radius } => {
-                (*pos - sheep_pos).length() < *radius
-            }
+            SafeArea::Circle { pos, radius } => (*pos - sheep_pos).length() < *radius,
         }
     }
 
@@ -79,32 +77,24 @@ impl SafeArea {
                 pos2,
                 radius: _,
             } => Vec3::new((pos1.x + pos2.x) / 2.0, 0.0, (pos1.y + pos2.y) / 2.0),
-            SafeArea::Circle { pos, radius } => {
-                Vec3::new(pos.x, 0.0, pos.y)
-            }
+            SafeArea::Circle { pos, radius } => Vec3::new(pos.x, 0.0, pos.y),
         }
     }
 
     pub fn get_scaled(&self, scale: f32) -> SafeArea {
         match self {
-            SafeArea::Rect { pos, size } => {
-                SafeArea::Rect {
-                    pos: *pos,
-                    size: *size * scale,
-                }
-            }
-            SafeArea::Ellipse { pos1, pos2, radius } => {
-                SafeArea::Ellipse {
-                    pos1: *pos1,
-                    pos2: *pos2,
-                    radius: *radius * scale,
-                }
+            SafeArea::Rect { pos, size } => SafeArea::Rect {
+                pos: *pos,
+                size: *size * scale,
             },
-            SafeArea::Circle { pos, radius } => {
-                SafeArea::Circle {
-                    pos: *pos,
-                    radius: *radius * scale,
-                }
+            SafeArea::Ellipse { pos1, pos2, radius } => SafeArea::Ellipse {
+                pos1: *pos1,
+                pos2: *pos2,
+                radius: *radius * scale,
+            },
+            SafeArea::Circle { pos, radius } => SafeArea::Circle {
+                pos: *pos,
+                radius: *radius * scale,
             },
         }
     }
@@ -130,7 +120,12 @@ fn draw_safe_area(mut gizmos: Gizmos, query: Query<&SafeArea, Without<HiddenSafe
                 radius: _,
             } => {}
             SafeArea::Circle { pos, radius } => {
-                gizmos.circle(Vec3::new(pos.x, 0.001, pos.y), Vec3::Y, *radius, Color::ORANGE);
+                gizmos.circle(
+                    Vec3::new(pos.x, 0.001, pos.y),
+                    Vec3::Y,
+                    *radius,
+                    Color::ORANGE,
+                );
             }
         }
     }

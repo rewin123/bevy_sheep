@@ -57,11 +57,11 @@ pub struct Storyteller {
 }
 
 impl Storyteller {
-    pub fn get_level_time(&self, time : &Time) -> f32 {
+    pub fn get_level_time(&self, time: &Time) -> f32 {
         time.elapsed_seconds() - self.level_start_time
     }
 
-    pub fn get_level_unfirom_time(&self, time : &Time) -> f32 {
+    pub fn get_level_unfirom_time(&self, time: &Time) -> f32 {
         self.get_level_time(time) / self.level_duration
     }
 }
@@ -200,11 +200,10 @@ pub enum FailReason {
     TaskFailed,
 }
 
-
 pub enum TaskStatus {
     Active,
     Done,
-    Failed
+    Failed,
 }
 
 #[derive(States, Debug, Clone, Eq, PartialEq, Hash, Default)]

@@ -38,7 +38,8 @@ fn walk_system(time: Res<Time>, mut query: Query<(&mut Velocity, &mut WalkContro
         let dspeed = controller.target_velocity - velocity.0;
         let accel = controller.acceleration.min(dspeed.length() * 100.0);
         let cur_vel = velocity.0;
-        velocity.0 += (dspeed.normalize_or_zero() * accel - cur_vel * AIR_RESISTANCE) * time.delta_seconds();
+        velocity.0 +=
+            (dspeed.normalize_or_zero() * accel - cur_vel * AIR_RESISTANCE) * time.delta_seconds();
         velocity.0 = velocity.0.clamp_length_max(controller.max_speed);
     }
 }

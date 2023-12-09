@@ -3,8 +3,15 @@ use rand::prelude::*;
 use std::f32::consts::PI;
 
 use crate::{
-    get_sprite_rotation, level_ui::CreateLevelUi, player::SpawnPlayer, safe_area::{SafeArea, LandSafeArea},
-    sprite_material::create_plane_mesh, torch::SpawnTorch, GameStuff, sunday::{DAY_SUN_COLOR, SUN_BASE_ILLUMINANCE, AMBIENT_BASE_ILLUMINANCE}, shepherd::SpawnShepherd,
+    get_sprite_rotation,
+    level_ui::CreateLevelUi,
+    player::SpawnPlayer,
+    safe_area::{LandSafeArea, SafeArea},
+    shepherd::SpawnShepherd,
+    sprite_material::create_plane_mesh,
+    sunday::{AMBIENT_BASE_ILLUMINANCE, DAY_SUN_COLOR, SUN_BASE_ILLUMINANCE},
+    torch::SpawnTorch,
+    GameStuff,
 };
 
 const TREE_PATH: &str = "test/pine.png";
@@ -17,8 +24,6 @@ impl Default for LevelSize {
         Self(50.)
     }
 }
-
-
 
 pub fn setup(
     mut commands: Commands,
@@ -120,7 +125,11 @@ pub fn setup(
     let num_of_torchs = 20;
     let torch_r = r / 2.0;
     for _ in 0..num_of_torchs {
-        let pos = Vec3::new(rng.gen_range(-torch_r..torch_r), 0.0, rng.gen_range(-torch_r..torch_r));
+        let pos = Vec3::new(
+            rng.gen_range(-torch_r..torch_r),
+            0.0,
+            rng.gen_range(-torch_r..torch_r),
+        );
 
         spawn_torch.send(SpawnTorch { position: pos });
     }
@@ -132,14 +141,13 @@ pub fn setup(
     commands
         .spawn(safe_area.clone())
         .insert(LandSafeArea {
-            start_area : safe_area.clone()
+            start_area: safe_area.clone(),
         })
         .insert(GameStuff);
 
     spawn_shepherd.send(SpawnShepherd {
         pos: Vec3::new(0.0, 0.0, -level_size.0),
     });
-
 
     create_level_ui.send(CreateLevelUi);
 }

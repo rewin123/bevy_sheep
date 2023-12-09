@@ -1,4 +1,9 @@
-use bevy::{input::mouse::MouseWheel, prelude::*, window::PrimaryWindow, pbr::{CascadeShadowConfig, CascadeShadowConfigBuilder}};
+use bevy::{
+    input::mouse::MouseWheel,
+    pbr::{CascadeShadowConfig, CascadeShadowConfigBuilder},
+    prelude::*,
+    window::PrimaryWindow,
+};
 
 use crate::{
     get_sprite_rotation,
@@ -224,7 +229,7 @@ fn camera_movement(
     player_query: Query<&Transform, (With<Player>, Without<Camera>)>,
     time: Res<Time>,
     mut scroll_evr: EventReader<MouseWheel>,
-    mut sun : Query<&mut CascadeShadowConfig>
+    mut sun: Query<&mut CascadeShadowConfig>,
 ) {
     let Ok((mut camera, mut distance)) = camera_query.get_single_mut() else {
         return;
@@ -232,7 +237,6 @@ fn camera_movement(
     let Ok(player) = player_query.get_single() else {
         return;
     };
-
 
     let Ok(mut sun) = sun.get_single_mut() else {
         return;
@@ -247,7 +251,6 @@ fn camera_movement(
         }
 
         distance.0 = distance.0.clamp(10.0, 150.0);
-        
 
         let mut cascade = CascadeShadowConfigBuilder::default();
         cascade.maximum_distance = distance.0 * 2.0;
@@ -267,7 +270,7 @@ fn set_cam_distance(
     mut commands: Commands,
     camera_without_dist: Query<(Entity, &Transform), (With<Camera>, Without<CameraDistance>)>,
     player_query: Query<&Transform, With<Player>>,
-    mut sun : Query<&mut CascadeShadowConfig>
+    mut sun: Query<&mut CascadeShadowConfig>,
 ) {
     let Ok(player) = player_query.get_single() else {
         return;

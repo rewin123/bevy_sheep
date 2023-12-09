@@ -1,6 +1,14 @@
 use bevy::{prelude::*, reflect::EnumInfo};
 
-use crate::{player::{DOG_SPEED, DOG_ACCELERATION}, common_storage::CommonStorage, get_sprite_rotation, physics::{Velocity, WalkController}, GameSet, torch::{TorchBase, IgniteTorch}, sunday::DayState};
+use crate::{
+    common_storage::CommonStorage,
+    get_sprite_rotation,
+    physics::{Velocity, WalkController},
+    player::{DOG_ACCELERATION, DOG_SPEED},
+    sunday::DayState,
+    torch::{IgniteTorch, TorchBase},
+    GameSet,
+};
 
 const SHEPHERD_PATH: &str = "test/Knight.png";
 
@@ -13,12 +21,10 @@ pub struct ShepherdPlugin;
 
 impl Plugin for ShepherdPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_event::<SpawnShepherd>()
-            .add_systems(Update, (
-                    spawn_shepherd_system,
-                    ignite_all_torhes,
-                ).in_set(GameSet::Playing)
+        app.add_event::<SpawnShepherd>()
+            .add_systems(
+                Update,
+                (spawn_shepherd_system, ignite_all_torhes).in_set(GameSet::Playing),
             )
             .add_systems(OnEnter(DayState::Evening), start_ignite_torches);
     }
@@ -35,10 +41,7 @@ pub struct Shepherd;
 #[derive(Component)]
 pub struct IgniteAllTorhes;
 
-fn start_ignite_torches(
-    mut commands: Commands,
-    query : Query<Entity, With<Shepherd>>
-) {
+fn start_ignite_torches(mut commands: Commands, query: Query<Entity, With<Shepherd>>) {
     if let Ok(entity) = query.get_single() {
         commands.entity(entity).insert(IgniteAllTorhes);
     }
@@ -46,17 +49,17 @@ fn start_ignite_torches(
 
 fn ignite_all_torhes(
     mut commands: Commands,
-    mut query : Query<(Entity, &mut WalkController, &Transform), With<IgniteAllTorhes>>,
-    torches : Query<(&Transform, &TorchBase)>,
-    mut ignite : EventWriter<IgniteTorch>
+    mut query: Query<(Entity, &mut WalkController, &Transform), With<IgniteAllTorhes>>,
+    torches: Query<(&Transform, &TorchBase)>,
+    mut ignite: EventWriter<IgniteTorch>,
 ) {
     let Ok((herd_entity, mut walk_controller, transform)) = query.get_single_mut() else {
         return;
     };
 
     //find nearest torch
-    let mut nearest_torch : Option<Vec3> = None;
-    let mut nearest_torch_data : Option<&TorchBase> = None;
+    let mut nearest_torch: Option<Vec3> = None;
+    let mut nearest_torch_data: Option<&TorchBase> = None;
     let mut dist = f32::MAX;
     for (torch_transform, torch) in torches.iter() {
         let dist_to_torch = (torch_transform.translation - transform.translation).length();
@@ -69,12 +72,13 @@ fn ignite_all_torhes(
 
     if let Some(nearest_torch) = nearest_torch {
         if dist < IGNITE_RADIUS {
-            ignite.send(IgniteTorch { 
+            ignite.send(IgniteTorch {
                 position: transform.translation,
-                radius: IGNITE_RADIUS
-            }); 
+                radius: IGNITE_RADIUS,
+            });
         } else {
-            walk_controller.target_velocity = (nearest_torch - transform.translation).normalize() * SHEPHERD_SPEED;
+            walk_controller.target_velocity =
+                (nearest_torch - transform.translation).normalize() * SHEPHERD_SPEED;
         }
     } else {
         commands.entity(herd_entity).remove::<IgniteAllTorhes>();
@@ -86,14 +90,16 @@ fn spawn_shepherd_system(
     mut commands: Commands,
     mut events: EventReader<SpawnShepherd>,
     asset_server: Res<AssetServer>,
-    common_storage : Res<CommonStorage>,
-    mut materials : ResMut<Assets<StandardMaterial>>,
+    common_storage: Res<CommonStorage>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for event in events.read() {
         commands.spawn((
             Shepherd::default(),
             PbrBundle {
-                transform: Transform::from_translation(event.pos).with_rotation(get_sprite_rotation()).with_scale(Vec3::new(1.0, 1.0, 2.0)),
+                transform: Transform::from_translation(event.pos)
+                    .with_rotation(get_sprite_rotation())
+                    .with_scale(Vec3::new(1.0, 1.0, 2.0)),
                 material: materials.add(StandardMaterial {
                     base_color_texture: Some(asset_server.load(SHEPHERD_PATH)),
                     ..default()
@@ -106,7 +112,7 @@ fn spawn_shepherd_system(
                 max_speed: SHEPHERD_SPEED,
                 acceleration: SHEPHERD_ACCEL,
                 target_velocity: Vec3::ZERO,
-            }
+            },
         ));
     }
     events.clear();

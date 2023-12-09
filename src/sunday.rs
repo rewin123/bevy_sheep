@@ -2,7 +2,11 @@ use std::f32::consts::PI;
 
 use bevy::prelude::*;
 
-use crate::{storyteller::Storyteller, GameSet, safe_area::{SafeArea, LandSafeArea}};
+use crate::{
+    safe_area::{LandSafeArea, SafeArea},
+    storyteller::Storyteller,
+    GameSet,
+};
 
 pub struct SundayPlugin;
 
@@ -34,7 +38,12 @@ impl Plugin for SundayPlugin {
         app.add_systems(Update, set_day_state.in_set(GameSet::Playing));
         app.add_state::<DayState>();
 
-        app.add_systems(Update, safe_area_evening_decrease.in_set(GameSet::Playing).run_if(in_state(DayState::Evening)));
+        app.add_systems(
+            Update,
+            safe_area_evening_decrease
+                .in_set(GameSet::Playing)
+                .run_if(in_state(DayState::Evening)),
+        );
         app.add_systems(OnEnter(DayState::Night), delete_land_area_at_night);
     }
 }
@@ -48,10 +57,10 @@ pub enum DayState {
 }
 
 fn set_day_state(
-    mut state : ResMut<NextState<DayState>>,
-    current_state : Res<State<DayState>>,
-    teller : Res<Storyteller>,
-    time : Res<Time>
+    mut state: ResMut<NextState<DayState>>,
+    current_state: Res<State<DayState>>,
+    teller: Res<Storyteller>,
+    time: Res<Time>,
 ) {
     let uniform_time = teller.get_level_unfirom_time(&time);
     if uniform_time < DAY_TIME {
@@ -71,9 +80,9 @@ fn set_day_state(
 
 fn sunday_system(
     time: Res<Time>,
-    teller : Res<Storyteller>,
-    mut sun : Query<(&mut Transform, &mut DirectionalLight)>,
-    mut ambient_light: ResMut<AmbientLight>
+    teller: Res<Storyteller>,
+    mut sun: Query<(&mut Transform, &mut DirectionalLight)>,
+    mut ambient_light: ResMut<AmbientLight>,
 ) {
     let Ok((mut transform, mut light)) = sun.get_single_mut() else {
         warn!("Could not get directional light");
@@ -87,18 +96,23 @@ fn sunday_system(
         ambient_light.color = Color::hex(AMBIENT_DAY_COLOR).unwrap();
         let sun_angle = sun_falloff * std::f32::consts::PI / 4.0;
         let pos = transform.translation.clone();
-        transform.look_at(pos + Vec3::new(-(PI / 4.0).cos(), -sun_angle.sin(), -sun_angle.cos()), Vec3::Y);
-
+        transform.look_at(
+            pos + Vec3::new(-(PI / 4.0).cos(), -sun_angle.sin(), -sun_angle.cos()),
+            Vec3::Y,
+        );
     } else if uniform_time < EVENING_TIME {
         let sun_falloff = 1.0 - (uniform_time - DAY_TIME) / (EVENING_TIME - DAY_TIME);
-        let color = 
-            Color::hex(DAY_SUN_COLOR).unwrap() * sun_falloff 
-                + Color::hex(EVENING_SUN_COLOR).unwrap() * (1.0 - sun_falloff);
+        let color = Color::hex(DAY_SUN_COLOR).unwrap() * sun_falloff
+            + Color::hex(EVENING_SUN_COLOR).unwrap() * (1.0 - sun_falloff);
         let sun_angle = sun_falloff * std::f32::consts::PI / 4.0;
-        let illuminance = SUN_BASE_ILLUMINANCE * sun_falloff + SUN_EVENING_ILLUMINANCE * (1.0 - sun_falloff);
+        let illuminance =
+            SUN_BASE_ILLUMINANCE * sun_falloff + SUN_EVENING_ILLUMINANCE * (1.0 - sun_falloff);
 
         let pos = transform.translation.clone();
-        transform.look_at(pos + Vec3::new(-(PI / 4.0).cos(), -sun_angle.sin(), -sun_angle.cos()), Vec3::Y);
+        transform.look_at(
+            pos + Vec3::new(-(PI / 4.0).cos(), -sun_angle.sin(), -sun_angle.cos()),
+            Vec3::Y,
+        );
         light.color = color;
         light.illuminance = illuminance;
 
@@ -109,24 +123,25 @@ fn sunday_system(
         let sun_angle = (1.0 - sun_falloff) * std::f32::consts::PI / 4.0;
         let illuminance = SUN_NIGHT_ILLUMINANCE;
         let pos = transform.translation.clone();
-        transform.look_at(pos + Vec3::new(-(PI / 4.0).cos(), -sun_angle.sin(), -sun_angle.cos()), Vec3::Y);
+        transform.look_at(
+            pos + Vec3::new(-(PI / 4.0).cos(), -sun_angle.sin(), -sun_angle.cos()),
+            Vec3::Y,
+        );
         light.color = color;
         light.illuminance = illuminance;
 
-        ambient_light.color = 
-            Color::hex(AMBIENT_NIGHT_COLOR).unwrap() * (1.0 - sun_falloff) + Color::hex(AMBIENT_DAY_COLOR).unwrap() * sun_falloff;
-        ambient_light.brightness = AMBIENT_NIGHT_ILLUMINANCE * (1.0 - sun_falloff) + sun_falloff * AMBIENT_DAY_ILLUMINANCE;
+        ambient_light.color = Color::hex(AMBIENT_NIGHT_COLOR).unwrap() * (1.0 - sun_falloff)
+            + Color::hex(AMBIENT_DAY_COLOR).unwrap() * sun_falloff;
+        ambient_light.brightness =
+            AMBIENT_NIGHT_ILLUMINANCE * (1.0 - sun_falloff) + sun_falloff * AMBIENT_DAY_ILLUMINANCE;
     } else {
-        
     }
 }
 
-
-
 fn safe_area_evening_decrease(
-    mut areas : Query<(&mut SafeArea, &LandSafeArea)>,
-    time : Res<Time>,
-    teller : Res<Storyteller>
+    mut areas: Query<(&mut SafeArea, &LandSafeArea)>,
+    time: Res<Time>,
+    teller: Res<Storyteller>,
 ) {
     let uniform_time = teller.get_level_unfirom_time(&time);
     let evening_time = (uniform_time - DAY_TIME) / (EVENING_TIME - DAY_TIME);
@@ -136,11 +151,7 @@ fn safe_area_evening_decrease(
     }
 }
 
-
-fn delete_land_area_at_night(
-    mut commands: Commands,
-    mut areas : Query<Entity, With<LandSafeArea>>,
-) {
+fn delete_land_area_at_night(mut commands: Commands, mut areas: Query<Entity, With<LandSafeArea>>) {
     for entity in areas.iter_mut() {
         commands.entity(entity).despawn_recursive();
     }

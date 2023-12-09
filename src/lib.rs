@@ -9,13 +9,13 @@ pub mod physics;
 pub mod player;
 pub mod safe_area;
 pub mod sheep;
+pub mod shepherd;
 pub mod sprite_material;
 pub mod storyteller;
+pub mod sunday;
 pub mod test_level;
 pub mod torch;
 pub mod wolf;
-pub mod sunday;
-pub mod shepherd;
 
 use std::f32::consts::PI;
 
