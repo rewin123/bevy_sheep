@@ -34,7 +34,7 @@ pub struct WalkController {
 }
 
 fn walk_system(time: Res<Time>, mut query: Query<(&mut Velocity, &mut WalkController)>) {
-    for (mut velocity, mut controller) in query.iter_mut() {
+    for (mut velocity, controller) in query.iter_mut() {
         let dspeed = controller.target_velocity - velocity.0;
         let accel = controller.acceleration.min(dspeed.length() * 100.0);
         let cur_vel = velocity.0;

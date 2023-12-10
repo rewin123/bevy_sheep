@@ -1,22 +1,14 @@
 //This global AI is responsible for creating problems for player
 //This module will be determine where and how sheep will be try to escape from safe zone
 
-use std::{
-    f32::consts::{E, PI},
-    time::Duration,
-};
+use std::time::Duration;
 
 use bevy::prelude::*;
-use rand::Rng;
 
 use crate::{
-    player::{Dog, DOG_SPEED},
-    sheep::{
-        Decision, GoTo, IdleFeeding, IsScared, Sheep, StartSheepCount,
-        RANDOM_WALK_SPEED_MULTIPLIER, SHEEP_SPEED,
-    },
-    sunday::{DayState, EpisodeTime},
-    test_level::LevelSize,
+    player::Dog,
+    sheep::{Sheep, StartSheepCount},
+    sunday::DayState,
     GameSet, GameState,
 };
 
@@ -27,6 +19,7 @@ impl Plugin for StorytellerPlugin {
         app.insert_resource(Storyteller {
             level_start_time: 0.0,
             level_duration: 4.0 * 60.0,
+            safearea_count: 1,
         })
         .init_resource::<Score>()
         .add_systems(
@@ -42,11 +35,11 @@ impl Plugin for StorytellerPlugin {
     }
 }
 
-
 #[derive(Resource)]
 pub struct Storyteller {
     pub level_start_time: f32,
     pub level_duration: f32,
+    pub safearea_count: u8,
 }
 
 impl Storyteller {
@@ -68,43 +61,41 @@ fn setup_start_time(mut commands: Commands, mut teller: ResMut<Storyteller>, tim
 }
 
 fn storyteller_system(
-    mut commands: Commands,
-    sheep: Query<(Entity, &Transform), (With<Sheep>, Without<IsScared>, Without<GoTo>)>,
-    mut teller: ResMut<Storyteller>,
-    time: Res<Time>,
-    level_size: Res<LevelSize>,
+    // mut commands: Commands,
+    // sheep: Query<(Entity, &Transform), (With<Sheep>, Without<IsScared>, Without<GoTo>)>,
+    // mut teller: ResMut<Storyteller>,
+    // time: Res<Time>,
+    // level_size: Res<LevelSize>,
     dog: Query<&Transform, With<Dog>>,
 
     current_task: Res<State<GlobalTask>>,
     mut next_task: ResMut<NextState<GlobalTask>>,
     day_state: Res<State<DayState>>,
-    episode_time: Res<EpisodeTime>,
+    // episode_time: Res<EpisodeTime>,
 ) {
     if *current_task != GlobalTask::None {
         return;
     }
 
-    let Ok(dog_transform) = dog.get_single() else {
+    let Ok(_dog_transform) = dog.get_single() else {
         return;
     };
     if *current_task == GlobalTask::None {
-        let level_time = time.elapsed_seconds() - teller.level_start_time;
-        let unfiorm_time = level_time / teller.level_duration;
+        // let level_time = time.elapsed_seconds() - teller.level_start_time;
+        // let unfiorm_time = level_time / teller.level_duration;
 
-        let episode_time = episode_time.0;
+        // let episode_time = episode_time.0;
 
         match &day_state.get() {
             DayState::Day => {
                 next_task.set(GlobalTask::SheepEscape);
-            },
-            DayState::Evening => {
-
-            },
+            }
+            DayState::Evening => {}
             DayState::Night => {
                 next_task.set(GlobalTask::SheepEscape);
-            },
+            }
         }
-    } 
+    }
 }
 
 #[derive(Component)]
@@ -135,8 +126,7 @@ fn level_timer(
 
 fn score_system(
     mut score: ResMut<Score>,
-    mut alived_sheep: Query<&Sheep>,
-    mut teller: ResMut<Storyteller>,
+    alived_sheep: Query<&Sheep>,
     time: Res<Time>,
     start_sheep_count: Res<StartSheepCount>,
 ) {

@@ -140,7 +140,7 @@ fn eating_system(
     time: Res<Time>,
     mut wolfs: Query<(Entity, &Transform, &mut Eating, &mut WalkController)>,
 ) {
-    for (wolf, wolf_transform, mut eating, mut walk_controller) in wolfs.iter_mut() {
+    for (wolf, _wolf_transform, mut eating, mut walk_controller) in wolfs.iter_mut() {
         eating.time -= time.delta_seconds();
         if eating.time <= 0.0 {
             commands.entity(wolf).remove::<Eating>().insert(GoOut);

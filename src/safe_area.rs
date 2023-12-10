@@ -2,10 +2,10 @@
 
 use std::f32::consts::PI;
 
-use bevy::{prelude::*, transform::commands};
+use bevy::prelude::*;
 use rand::Rng;
 
-use crate::{sheep::Sheep, storyteller::Storyteller};
+use crate::sheep::Sheep;
 
 pub struct SafeAreaPlugin;
 
@@ -22,11 +22,10 @@ impl Plugin for SafeAreaPlugin {
 #[derive(Component, Clone)]
 pub enum SafeArea {
     Rect { pos: Vec2, size: Vec2 },
-    Ellipse { pos1: Vec2, pos2: Vec2, radius: f32 },
     Circle { pos: Vec2, radius: f32 },
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct LandSafeArea {
     pub start_area: SafeArea,
 } //Mark for day safe area
@@ -40,16 +39,29 @@ impl SafeArea {
 
                 dx.abs() < size.x / 2.0 && dy.abs() < size.y / 2.0
             }
-            SafeArea::Ellipse {
-                pos1,
-                pos2,
-                radius: _,
-            } => {
-                let d = (*pos1 - *pos2).length();
-                let r = (*pos1 - sheep_pos).length();
-                r * r <= d * d
-            }
             SafeArea::Circle { pos, radius } => (*pos - sheep_pos).length() < *radius,
+        }
+    }
+
+    pub fn set_pos(&mut self, mew_pos: Vec2) {
+        match self {
+            SafeArea::Rect { pos, size: _ } => {
+                *pos = mew_pos;
+            }
+            SafeArea::Circle { pos, radius: _ } => {
+                *pos = mew_pos;
+            }
+        }
+    }
+
+    pub fn downscale(&mut self, scale: f32) {
+        match self {
+            SafeArea::Rect { pos: _, size } => {
+                *size = *size / Vec2::new(scale, scale);
+            }
+            SafeArea::Circle { pos: _, radius } => {
+                *radius = *radius / scale;
+            }
         }
     }
 
@@ -72,12 +84,21 @@ impl SafeArea {
     pub fn get_center(&self) -> Vec3 {
         match self {
             SafeArea::Rect { pos, size: _ } => Vec3::new(pos.x, 0.0, pos.y),
-            SafeArea::Ellipse {
-                pos1,
-                pos2,
-                radius: _,
-            } => Vec3::new((pos1.x + pos2.x) / 2.0, 0.0, (pos1.y + pos2.y) / 2.0),
-            SafeArea::Circle { pos, radius } => Vec3::new(pos.x, 0.0, pos.y),
+            SafeArea::Circle { pos, radius: _ } => Vec3::new(pos.x, 0.0, pos.y),
+        }
+    }
+
+    pub fn get_center_2d(&self) -> Vec2 {
+        match self {
+            SafeArea::Rect { pos, size: _ } => Vec2::new(pos.x, pos.y),
+            SafeArea::Circle { pos, radius: _ } => Vec2::new(pos.x, pos.y),
+        }
+    }
+
+    pub fn get_width(&self) -> f32 {
+        match self {
+            SafeArea::Rect { pos: _, size } => size.x,
+            SafeArea::Circle { pos: _, radius } => *radius,
         }
     }
 
@@ -86,11 +107,6 @@ impl SafeArea {
             SafeArea::Rect { pos, size } => SafeArea::Rect {
                 pos: *pos,
                 size: *size * scale,
-            },
-            SafeArea::Ellipse { pos1, pos2, radius } => SafeArea::Ellipse {
-                pos1: *pos1,
-                pos2: *pos2,
-                radius: *radius * scale,
             },
             SafeArea::Circle { pos, radius } => SafeArea::Circle {
                 pos: *pos,
@@ -111,21 +127,11 @@ fn draw_safe_area(mut gizmos: Gizmos, query: Query<&SafeArea, Without<HiddenSafe
                     Vec3::new(pos.x, 0.001, pos.y),
                     Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0),
                     *size,
-                    Color::ORANGE,
+                    Color::RED,
                 );
             }
-            SafeArea::Ellipse {
-                pos1: _,
-                pos2: _,
-                radius: _,
-            } => {}
             SafeArea::Circle { pos, radius } => {
-                gizmos.circle(
-                    Vec3::new(pos.x, 0.001, pos.y),
-                    Vec3::Y,
-                    *radius,
-                    Color::ORANGE,
-                );
+                gizmos.circle(Vec3::new(pos.x, 0.001, pos.y), Vec3::Y, *radius, Color::RED);
             }
         }
     }

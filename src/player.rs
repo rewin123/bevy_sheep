@@ -270,7 +270,7 @@ fn set_cam_distance(
     mut commands: Commands,
     camera_without_dist: Query<(Entity, &Transform), (With<Camera>, Without<CameraDistance>)>,
     player_query: Query<&Transform, With<Player>>,
-    mut sun: Query<&mut CascadeShadowConfig>,
+    _: Query<&CascadeShadowConfig>,
 ) {
     let Ok(player) = player_query.get_single() else {
         return;

@@ -1,22 +1,28 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::{storyteller::{Storyteller, GlobalTask, FailReason}, sunday::{DayState, EpisodeTime}, sheep::{Sheep, IsScared, GoTo, IdleFeeding, Decision}, player::Dog, test_level::LevelSize, GameSet, GameState, level_ui::TaskText};
+use crate::{
+    level_ui::TaskText,
+    player::Dog,
+    sheep::{Decision, GoTo, IdleFeeding, IsScared, Sheep},
+    storyteller::{FailReason, GlobalTask, Storyteller},
+    sunday::{DayState, EpisodeTime},
+    test_level::LevelSize,
+    GameSet, GameState,
+};
 
 pub struct SheepEscapePlugin;
 
-
 impl Plugin for SheepEscapePlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_systems(OnEnter(GlobalTask::SheepEscape), generate_new_wave)
-            .add_systems(Update, 
-                (
-                    apply_deferred,
-                    check_wave_finish,
-                    wave_executor,
-            ).chain().run_if(in_state(GlobalTask::SheepEscape)).in_set(GameSet::Playing))
-            
+        app.add_systems(OnEnter(GlobalTask::SheepEscape), generate_new_wave)
+            .add_systems(
+                Update,
+                (apply_deferred, check_wave_finish, wave_executor)
+                    .chain()
+                    .run_if(in_state(GlobalTask::SheepEscape))
+                    .in_set(GameSet::Playing),
+            )
             .init_resource::<NextWave>()
             .init_resource::<SheepWaveStatus>();
     }
@@ -37,23 +43,22 @@ pub struct SheepWave {
 
 #[derive(Resource, Default)]
 pub struct SheepWaveStatus {
-    pub start_count : usize,
-    pub sheep : Vec<Entity>
+    pub start_count: usize,
+    pub sheep: Vec<Entity>,
 }
 
 fn check_wave_finish(
     mut commands: Commands,
-    escapers : Query<Entity, (With<ShawshankRedemption>, With<Sheep>)>,
-    sheep : Query<&Sheep>,
-    mut global_task : ResMut<NextState<GlobalTask>>,
-    mut sheep_wave_status : ResMut<SheepWaveStatus>,
-    mut game_state : ResMut<NextState<GameState>>,
-    next_wave : Res<NextWave>,
-    mut info_texts : Query<&mut Text, With<TaskText>>,
+    escapers: Query<Entity, (With<ShawshankRedemption>, With<Sheep>)>,
+    sheep: Query<&Sheep>,
+    mut global_task: ResMut<NextState<GlobalTask>>,
+    mut sheep_wave_status: ResMut<SheepWaveStatus>,
+    mut game_state: ResMut<NextState<GameState>>,
+    next_wave: Res<NextWave>,
+    mut info_texts: Query<&mut Text, With<TaskText>>,
 ) {
     let loose_limit = (sheep_wave_status.start_count / 2).max(10);
     if escapers.is_empty() && next_wave.0.is_none() && sheep_wave_status.start_count != 0 {
-
         let mut alived_sheep = 0;
         for e in &sheep_wave_status.sheep {
             if sheep.get(*e).is_ok() {
@@ -63,7 +68,9 @@ fn check_wave_finish(
         info!("WAVE FINISHED");
 
         if sheep_wave_status.start_count - alived_sheep > loose_limit {
-            commands.insert_resource(FailReason::TaskFailed("Half of the runaway sheep were eaten :(".to_string()));
+            commands.insert_resource(FailReason::TaskFailed(
+                "Half of the runaway sheep were eaten :(".to_string(),
+            ));
             game_state.set(GameState::Finish);
             global_task.set(GlobalTask::None);
         } else {
@@ -82,22 +89,24 @@ fn check_wave_finish(
         }
     } else if sheep_wave_status.start_count != 0 {
         for mut t in info_texts.iter_mut() {
-            t.sections[0].value = format!("{} sheep are trying to escape! Stop them! Dont lose more than {}", escapers.iter().count(), loose_limit);
+            t.sections[0].value = format!(
+                "{} sheep are trying to escape! Stop them! Dont lose more than {}",
+                escapers.iter().count(),
+                loose_limit
+            );
         }
     }
 }
 
 fn generate_new_wave(
-    mut commands: Commands,
     time: Res<Time>,
     mut next_wave: ResMut<NextWave>,
-    teller : ResMut<Storyteller>,
-    day_state : Res<State<DayState>>,
-    episode_time : Res<EpisodeTime>,
+    teller: ResMut<Storyteller>,
+    day_state: Res<State<DayState>>,
+    episode_time: Res<EpisodeTime>,
     sheep: Query<(Entity, &Transform), (With<Sheep>, Without<IsScared>, Without<GoTo>)>,
 ) {
     let level_time = time.elapsed_seconds() - teller.level_start_time;
-    let unfiorm_time = level_time / teller.level_duration;
 
     let episode_time = episode_time.0;
 
@@ -134,17 +143,17 @@ fn generate_new_wave(
 
 fn wave_executor(
     mut commands: Commands,
-    mut next_wave : ResMut<NextWave>,
-    time : Res<Time>,
+    mut next_wave: ResMut<NextWave>,
+    time: Res<Time>,
     sheep: Query<(Entity, &Transform), (With<Sheep>, Without<IsScared>, Without<GoTo>)>,
     dog: Query<&Transform, With<Dog>>,
     level_size: Res<LevelSize>,
-    mut sheep_wave_status : ResMut<SheepWaveStatus>,
+    mut sheep_wave_status: ResMut<SheepWaveStatus>,
 ) {
     let Ok(dog_transform) = dog.get_single() else {
         return;
     };
-    
+
     if next_wave.0.is_some() {
         let wave = next_wave.0.as_ref().unwrap().clone();
         let cur_time = time.elapsed_seconds();

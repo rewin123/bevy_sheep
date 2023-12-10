@@ -65,7 +65,6 @@ fn spawn_torch(
 ) {
     for event in events.read() {
         let torch_radius = 10.0;
-        let smooth_radius = torch_radius + 0.01;
         let light_height = torch_radius * 0.5;
 
         let outer_spot_angle = ((torch_radius / light_height) as f32).atan();
