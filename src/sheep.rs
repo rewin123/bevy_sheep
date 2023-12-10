@@ -359,6 +359,7 @@ pub fn update_scared_sheeps(
     >,
     dog: Query<&Transform, With<Dog>>,
     safeareas: Query<&SafeArea>,
+    field: ResMut<NNTree>,
 ) {
     let Ok(dog_transform) = dog.get_single() else {
         return;
@@ -372,7 +373,7 @@ pub fn update_scared_sheeps(
         } else {
             scare.time += time.delta_seconds();
 
-            let dog_dpos = dog_transform.translation - t.translation;
+            let dog_dpos = t.translation - dog_transform.translation;
             let dog_distance = dog_dpos.length();
 
             let dir = dog_dpos.normalize_or_zero();
@@ -392,14 +393,28 @@ pub fn update_scared_sheeps(
                 .max(SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER);
 
             if dog_distance < SCARE_MAX_DIST {
-                if let Some(sa) = nearest_sa {
-                    let dir_to_sa = (sa.get_center() - t.translation).normalize_or_zero();
-
-                    if dir_to_sa.dot(dir) > 0.0 {
-                        walk.0 = -dir * speed_amount;
-                    } else {
-                        walk.0 = (-dir + dir_to_sa).normalize_or_zero() * speed_amount;
+                let nearest = field.k_nearest_neighbour(t.translation, 7);
+                let mut mean_nearest_sheep = Vec3::ZERO;
+                let mut count = 0;
+                for (pos, _) in nearest.iter().skip(1) {
+                    if (*pos - t.translation).length() < 5.0 {
+                        let ddog = *pos - dog_transform.translation;
+                        if ddog.dot(dog_dpos) >= 0.0 {
+                            mean_nearest_sheep += *pos;
+                            count += 1;
+                        }
                     }
+                }
+                if count > 0 {
+                    let mean_nearest_sheep = mean_nearest_sheep / (count as f32);
+                    if (mean_nearest_sheep - dog_transform.translation).length() < dog_dpos.length() * 0.5 {
+                        walk.0 = dir * speed_amount;
+                        scare.last_vel = walk.0;
+                    } else {
+                        walk.0 = (mean_nearest_sheep - t.translation).normalize_or_zero() * speed_amount;
+                    }
+                } else {
+                    walk.0 = dir * speed_amount;
                     scare.last_vel = walk.0;
                 }
             } else {

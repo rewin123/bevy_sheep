@@ -4,12 +4,13 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
+use rand::Rng;
 
 use crate::{
     player::Dog,
-    sheep::{Sheep, StartSheepCount},
-    sunday::DayState,
-    GameSet, GameState,
+    sheep::{Sheep, StartSheepCount, IsScared, GoTo},
+    sunday::{DayState, EpisodeTime},
+    GameSet, GameState, test_level::LevelSize,
 };
 
 pub struct StorytellerPlugin;
@@ -18,8 +19,9 @@ impl Plugin for StorytellerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Storyteller {
             level_start_time: 0.0,
-            level_duration: 4.0 * 60.0,
+            level_duration: 6.0 * 60.0,
             safearea_count: 1,
+            change_safe_area_was_spanwed: false
         })
         .init_resource::<Score>()
         .add_systems(
@@ -42,6 +44,8 @@ pub struct Storyteller {
     pub level_start_time: f32,
     pub level_duration: f32,
     pub safearea_count: u8,
+
+    pub change_safe_area_was_spanwed: bool,
 }
 
 impl Storyteller {
@@ -76,11 +80,11 @@ fn setup_delay(mut delay: ResMut<NextTaskDelay>) {
 }
 
 fn storyteller_system(
-    // mut commands: Commands,
-    // sheep: Query<(Entity, &Transform), (With<Sheep>, Without<IsScared>, Without<GoTo>)>,
-    // mut teller: ResMut<Storyteller>,
-    // time: Res<Time>,
-    // level_size: Res<LevelSize>,
+    mut commands: Commands,
+    sheep: Query<(Entity, &Transform), (With<Sheep>, Without<IsScared>, Without<GoTo>)>,
+    mut teller: ResMut<Storyteller>,
+    time: Res<Time>,
+    level_size: Res<LevelSize>,
     dog: Query<&Transform, With<Dog>>,
 
     current_task: Res<State<GlobalTask>>,
@@ -108,7 +112,12 @@ fn storyteller_system(
 
         match &day_state.get() {
             DayState::Day => {
-                next_task.set(GlobalTask::SheepEscape);
+                if episode_time.0 > 0.5 && !teller.change_safe_area_was_spanwed {
+                    teller.change_safe_area_was_spanwed = true;
+                    next_task.set(GlobalTask::ChangeSafeArea);
+                } else {
+                    next_task.set(GlobalTask::SheepEscape);
+                }
             }
             DayState::Evening => {}
             DayState::Night => {
@@ -186,4 +195,5 @@ pub enum GlobalTask {
     WolfAttack,
     CollectSheepInArea,
     TorchProblem,
+    ChangeSafeArea
 }

@@ -147,6 +147,10 @@ fn update_delight_system(
 
         if ok_torches == status.torches_to_lit.len() {
             global_task.set(GlobalTask::None);
+            if let Ok(mut text) = texts.get_single_mut() {
+                text.sections[0].value = format!("");
+            }
+            return;
         } else {
             let lived_sheep_count = sheep.iter().count();
             if status.start_sheep_count - lived_sheep_count > status.max_dead_sheep {
@@ -159,7 +163,7 @@ fn update_delight_system(
         }
 
         if let Ok(mut text) = texts.get_single_mut() {
-            text.sections[0].value = format!("The torches are going out! Urgently wake up the shepherd to light the torches!\n{} / {} torches lit\n{} seconds left\nDont let to eat more then {}", ok_torches, status.torches_to_lit.len(), status.time_for_mission, status.max_dead_sheep);
+            text.sections[0].value = format!("The torches are going out! Urgently wake up the shepherd to light the torches! {} / {} torches lit\n{:.0} seconds left. Dont let to eat more then {}", ok_torches, status.torches_to_lit.len(), status.time_for_mission, status.max_dead_sheep);
         }
     }
 }

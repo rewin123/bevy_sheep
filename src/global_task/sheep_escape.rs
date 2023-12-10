@@ -112,9 +112,9 @@ fn generate_new_wave(
 
     if *day_state == DayState::Day {
         let sheep_count = sheep.iter().count() as f32;
-        let c = sheep_count * episode_time * 0.2 + 1.0;
+        let c = sheep_count * episode_time * 0.2 + 10.0;
         let mut dt = 5.0 - 1.0 * episode_time;
-        let n = 1.0 + 1.0 * episode_time;
+        let n = 1.0 + 3.0 * episode_time;
 
         if level_time < 5.0 {
             dt = 2.0;
@@ -122,7 +122,7 @@ fn generate_new_wave(
 
         next_wave.0 = Some(SheepWave {
             count: c as usize,
-            beams: n as usize,
+            beams: n.round() as usize,
             time: time.elapsed_seconds() + dt,
         });
     } else if *day_state == DayState::Night {

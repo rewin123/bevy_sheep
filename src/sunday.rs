@@ -29,11 +29,9 @@ pub const AMBIENT_NIGHT_COLOR: &str = "643a69";
 pub const AMBIENT_DAY_ILLUMINANCE: f32 = 1.0;
 pub const AMBIENT_NIGHT_ILLUMINANCE: f32 = 0.1;
 
-const DAY_TIME: f32 = 0.0;
-const EVENING_TIME: f32 = 0.2;
-const NIGHT_TIME: f32 = 0.3;
-
-const DAY_TIME_DOWNSCALE: f32 = 2.0;
+const DAY_TIME: f32 = 0.6;
+const EVENING_TIME: f32 = 0.75;
+const NIGHT_TIME: f32 = 0.8;
 
 impl Plugin for SundayPlugin {
     fn build(&self, app: &mut App) {
@@ -49,12 +47,6 @@ impl Plugin for SundayPlugin {
             safe_area_evening_decrease
                 .in_set(GameSet::Playing)
                 .run_if(in_state(DayState::Evening)),
-        );
-        app.add_systems(
-            Update,
-            safe_area_dayshift
-                .in_set(GameSet::Playing)
-                .run_if(in_state(DayState::Day)),
         );
         app.add_systems(OnEnter(DayState::Night), delete_land_area_at_night);
 
@@ -188,35 +180,35 @@ fn safe_area_evening_decrease(
     }
 }
 
-fn safe_area_dayshift(
-    mut commands: Commands,
-    mut areas: Query<(&mut SafeArea, &LandSafeArea)>,
-    mut teller: ResMut<Storyteller>,
-    time: Res<Time>,
-) {
-    let uniform_time = teller.get_level_time(&time);
-    let area_count = teller.safearea_count;
-    if uniform_time > 25. && area_count <= 1 {
-        let mut rng = rand::thread_rng();
-        let pos = rng.gen_range(8..=20) as f32;
-        for (mut area, _) in areas.iter_mut() {
-            let center = area.get_center_2d();
-            let new_safearea = SafeArea::Circle {
-                pos: center + Vec2 { x: -pos, y: -pos },
-                radius: area.get_width() / (2. * DAY_TIME_DOWNSCALE),
-            };
-            commands.spawn((
-                new_safearea.clone(),
-                LandSafeArea {
-                    start_area: new_safearea,
-                },
-            ));
-            area.set_pos(center + Vec2 { x: pos, y: pos });
-            area.downscale(DAY_TIME_DOWNSCALE);
-            teller.safearea_count += 1;
-        }
-    }
-}
+// fn safe_area_dayshift(
+//     mut commands: Commands,
+//     mut areas: Query<(&mut SafeArea, &LandSafeArea)>,
+//     mut teller: ResMut<Storyteller>,
+//     time: Res<Time>,
+// ) {
+//     let uniform_time = teller.get_level_time(&time);
+//     let area_count = teller.safearea_count;
+//     if uniform_time > 25. && area_count <= 1 {
+//         let mut rng = rand::thread_rng();
+//         let pos = rng.gen_range(8..=20) as f32;
+//         for (mut area, _) in areas.iter_mut() {
+//             let center = area.get_center_2d();
+//             let new_safearea = SafeArea::Circle {
+//                 pos: center + Vec2 { x: -pos, y: -pos },
+//                 radius: area.get_width() / (2. * DAY_TIME_DOWNSCALE),
+//             };
+//             commands.spawn((
+//                 new_safearea.clone(),
+//                 LandSafeArea {
+//                     start_area: new_safearea,
+//                 },
+//             ));
+//             area.set_pos(center + Vec2 { x: pos, y: pos });
+//             area.downscale(DAY_TIME_DOWNSCALE);
+//             teller.safearea_count += 1;
+//         }
+//     }
+// }
 
 fn delete_land_area_at_night(mut commands: Commands, mut areas: Query<Entity, With<LandSafeArea>>) {
     for entity in areas.iter_mut() {
