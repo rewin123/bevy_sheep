@@ -131,7 +131,7 @@ fn update_delight_system(
         if status.time_for_mission < 0.0 {
             gamestate.set(GameState::Finish);
             commands.insert_resource(FailReason::TaskFailed(format!(
-                "Not all the torches were lit. You should be better at waking up ancient vampires."
+                "Not enough torches lit. Seems like your master needed a good shove."
             )));
             return;
         }
@@ -156,14 +156,14 @@ fn update_delight_system(
             if status.start_sheep_count - lived_sheep_count > status.max_dead_sheep {
                 gamestate.set(GameState::Finish);
                 commands.insert_resource(FailReason::TaskFailed(format!(
-                    "Too many sheep was eaten. You should be better at waking up ancient vampires."
+                    "Too many of your flock got eaten. Seems like your master needed a good shove."
                 )));
                 return;
             }
         }
 
         if let Ok(mut text) = texts.get_single_mut() {
-            text.sections[0].value = format!("The torches are going out! Urgently wake up the shepherd to light the torches! {} / {} torches lit\n{:.0} seconds left. Dont let to eat more then {}", ok_torches, status.torches_to_lit.len(), status.time_for_mission, status.max_dead_sheep);
+            text.sections[0].value = format!("The torches are going out! Wake up the shepherd so he can light them! {} / {} torches lit\n{:.0} seconds left. Dont let to eat more then {}", ok_torches, status.torches_to_lit.len(), status.time_for_mission, status.max_dead_sheep);
         }
     }
 }

@@ -69,7 +69,7 @@ fn check_wave_finish(
 
         if sheep_wave_status.start_count - alived_sheep > loose_limit {
             commands.insert_resource(FailReason::TaskFailed(
-                "Half of the runaway sheep were eaten :(".to_string(),
+                "Half the runway flock has been eaten. That's giving bad dog, don't you think?".to_string(),
             ));
             game_state.set(GameState::Finish);
             global_task.set(GlobalTask::None);
@@ -85,7 +85,7 @@ fn check_wave_finish(
         }
     } else if next_wave.0.is_some() {
         for mut t in info_texts.iter_mut() {
-            t.sections[0].value = "The sheep are worried, wait for it".to_string();
+            t.sections[0].value = "Your flock is getting restless, wait for it".to_string();
         }
     } else if sheep_wave_status.start_count != 0 {
         for mut t in info_texts.iter_mut() {

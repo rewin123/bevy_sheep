@@ -37,11 +37,11 @@ fn setup_finish_screen(mut commands: Commands, score: Res<Score>, fail: Option<R
     })).with_children(|parent| {
         let text = if let Some(fail) = fail {
             match fail.as_ref() {
-                FailReason::SheepDied => format!("Uh-oh. \nWhat bad luck, half the sheep have been eaten, try again :( \nIf you escape from the vampire."),
-                FailReason::TaskFailed(reason) => format!("Uh-oh. \nYou failed the task, try again :(\nReason: {} \nIf you escape from the vampire.", reason),
+                FailReason::SheepDied => format!("Uh-oh. \nWhat a bad dog. Half your sheep have been eaten, you fleay mutt. Await your punishment. \nIf you're alive afterwards, give it a decent try."),
+                FailReason::TaskFailed(reason) => format!("Uh-oh. Bad dog. \nYou failed, filthy mutt. \nReason: {} \nPrepare to be punished.", reason),
             }
         } else {
-            format!("Congratulations! \nYou survived your workday! \nYou did well, the vampire is waiting for you tomorrow.")
+            format!("Good dog! \nYou get to live another day. \nYou did well enough. Your master will be waiting for you tomorrow.")
         };
 
         parent.spawn(TextBundle::from_section(

@@ -118,7 +118,7 @@ pub fn setup_alive_sheep_counter(
     let mut text_style = TextStyle::default();
     text_style.font_size = FONT_SIZE;
     let sheep_counter = commands
-        .spawn(TextBundle::from_section("Alive sheeps: ", text_style))
+        .spawn(TextBundle::from_section("Sheep alive: ", text_style))
         .insert(SheepAliveDebugCounter)
         .id();
 
@@ -135,7 +135,7 @@ pub fn alive_sheep_counter(
     let alive_sheep_count = sheeps.iter().count();
     for mut text in &mut query {
         text.sections[0].value = format!(
-            "Alive sheeps: {}/{}",
+            "Sheep alive: {}/{}",
             alive_sheep_count, start_sheep_count.0
         );
     }

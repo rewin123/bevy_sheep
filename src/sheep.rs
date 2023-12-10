@@ -407,7 +407,7 @@ pub fn update_scared_sheeps(
                 }
                 if count > 0 {
                     let mean_nearest_sheep = mean_nearest_sheep / (count as f32);
-                    if (mean_nearest_sheep - dog_transform.translation).length() < dog_dpos.length() * 0.5 {
+                    if (mean_nearest_sheep - dog_transform.translation).length() < dog_dpos.length() * 0.8 {
                         walk.0 = dir * speed_amount;
                         scare.last_vel = walk.0;
                     } else {
