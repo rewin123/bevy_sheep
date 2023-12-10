@@ -161,15 +161,13 @@ impl StateChance {
 pub fn scared_sheeps(
     mut commands: Commands,
     mut event_reader: EventReader<Bark>,
-    mut sheeps: Query<(Entity, &Transform, &mut SheepTargetVel, &mut Decision), With<Sheep>>,
+    mut sheeps: Query<(Entity, &Transform, &mut SheepTargetVel, &mut Decision), (With<Sheep>, Without<IsScared>)>,
 ) {
     if let Some(bark) = event_reader.read().next() {
         let bark_origin = bark.position;
         for mut sheep in &mut sheeps {
             if sheep.1.translation.distance(bark_origin) <= bark.radius {
                 let scare = IsScared::default();
-                sheep.2 .0 = (sheep.1.translation - bark_origin).normalize_or_zero() * SHEEP_SPEED;
-                sheep.2 .0.y = 0.0; //sheep must not fly and be in fixed height
                 commands
                     .entity(sheep.0)
                     .insert(scare)
@@ -378,48 +376,37 @@ pub fn update_scared_sheeps(
 
             let dir = dog_dpos.normalize_or_zero();
 
-            let mut nearest_sa = None;
-            let mut nearest_dist = f32::MAX;
-            for sa in safeareas.iter() {
-                let dist = t.translation.distance(sa.get_center());
-                if dist < nearest_dist {
-                    nearest_sa = Some(sa);
-                    nearest_dist = dist;
-                }
-            }
-
             let speed_amount = (SHEEP_SPEED * (1.0 - dog_distance / SCARE_MAX_DIST)
                 + SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER)
                 .max(SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER);
 
-            if dog_distance < SCARE_MAX_DIST {
-                let nearest = field.k_nearest_neighbour(t.translation, 7);
-                let mut mean_nearest_sheep = Vec3::ZERO;
-                let mut count = 0;
-                for (pos, _) in nearest.iter().skip(1) {
-                    if (*pos - t.translation).length() < 5.0 {
-                        let ddog = *pos - dog_transform.translation;
-                        if ddog.dot(dog_dpos) >= 0.0 {
-                            mean_nearest_sheep += *pos;
-                            count += 1;
-                        }
+            let nearest = field.k_nearest_neighbour(t.translation, 7);
+            let mut mean_nearest_sheep = Vec3::ZERO;
+            let mut count = 0;
+            for (pos, _) in nearest.iter().skip(1) {
+                if (*pos - t.translation).length() < 5.0 {
+                    let ddog = *pos - dog_transform.translation;
+                    if ddog.dot(dog_dpos) >= 0.0 {
+                        mean_nearest_sheep += *pos;
+                        count += 1;
                     }
                 }
-                if count > 0 {
-                    let mean_nearest_sheep = mean_nearest_sheep / (count as f32);
-                    if (mean_nearest_sheep - dog_transform.translation).length() < dog_dpos.length() * 0.8 {
-                        walk.0 = dir * speed_amount;
-                        scare.last_vel = walk.0;
-                    } else {
-                        walk.0 = (mean_nearest_sheep - t.translation).normalize_or_zero() * speed_amount;
-                    }
+            }
+            if count > 0 {
+                let mean_nearest_sheep = mean_nearest_sheep / (count as f32);
+                if (mean_nearest_sheep - dog_transform.translation).length() < dog_dpos.length() {
+                    walk.0 = (mean_nearest_sheep - dog_transform.translation).normalize_or_zero() * speed_amount;
+                    scare.last_vel = walk.0;
                 } else {
-                    walk.0 = dir * speed_amount;
+                    walk.0 = ((mean_nearest_sheep - dog_transform.translation).normalize_or_zero() + (mean_nearest_sheep - t.translation).normalize_or_zero() * 1.5).normalize_or_zero()
+                                 * speed_amount;
                     scare.last_vel = walk.0;
                 }
             } else {
-                walk.0 = scare.last_vel;
+                walk.0 = dir * speed_amount;
+                scare.last_vel = walk.0;
             }
+            
         }
     }
 }

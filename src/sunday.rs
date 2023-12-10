@@ -29,7 +29,7 @@ pub const AMBIENT_NIGHT_COLOR: &str = "643a69";
 pub const AMBIENT_DAY_ILLUMINANCE: f32 = 1.0;
 pub const AMBIENT_NIGHT_ILLUMINANCE: f32 = 0.1;
 
-const DAY_TIME: f32 = 0.6;
+const DAY_TIME: f32 = 0.5;
 const EVENING_TIME: f32 = 0.75;
 const NIGHT_TIME: f32 = 0.8;
 

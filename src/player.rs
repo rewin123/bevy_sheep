@@ -9,13 +9,17 @@ use crate::{
     get_sprite_rotation,
     physics::Velocity,
     sprite_material::{create_plane_mesh, SpriteExtension, SpriteMaterial},
-    GameStuff,
+    GameStuff, GameSet,
 };
 
 const DOG_PATH: &str = "test/dog.png";
 
 pub const DOG_SPEED: f32 = 45.0 * 1000.0 / 3600.0; // Sheepdog accepts 35 km/h in reality (but fastest dog can do 67 km/h o.0)
 pub const DOG_ACCELERATION: f32 = DOG_SPEED * 4.0;
+
+pub const RUN_K: f32 = 1.5;
+pub const STAMINA_INCREASE: f32 = 1.0 / 2.5;
+pub const STAMINA_DECREASE: f32 = 1.0 / 5.0 + STAMINA_INCREASE;
 
 pub struct PlayerPlugin;
 
@@ -31,7 +35,7 @@ impl Plugin for PlayerPlugin {
         app.add_event::<SpawnPlayer>()
             .add_event::<Bark>()
             .add_state::<MovementStyle>()
-            .add_systems(Update, spawn_player_by_event)
+            .add_systems(Update, spawn_player_by_event.in_set(GameSet::Playing))
             .add_systems(
                 Update,
                 player_movemnt_by_wasd.run_if(in_state(MovementStyle::WASD)),
@@ -40,9 +44,15 @@ impl Plugin for PlayerPlugin {
                 Update,
                 player_movemnt_by_mouse.run_if(in_state(MovementStyle::Mouse)),
             )
-            .add_systems(Update, (change_movement_style, bark))
-            .add_systems(Update, (set_cam_distance, camera_movement));
+            .add_systems(Update, (change_movement_style, bark).in_set(GameSet::Playing))
+            .add_systems(Update, (set_cam_distance, camera_movement, stamina_increse).in_set(GameSet::Playing));
     }
+}
+
+#[derive(Component)]
+pub struct Stamina {
+    pub value: f32,
+    pub blocked: bool
 }
 
 fn change_movement_style(
@@ -55,6 +65,19 @@ fn change_movement_style(
             next_state.set(MovementStyle::WASD);
         } else {
             next_state.set(MovementStyle::Mouse);
+        }
+    }
+}
+
+fn stamina_increse(
+    mut stamina_query: Query<&mut Stamina>,
+    time: Res<Time>,
+) {
+    for mut stamina in &mut stamina_query {
+        stamina.value += STAMINA_INCREASE * time.delta_seconds();
+        if stamina.value > 1.0 {
+            stamina.value = 1.0;
+            stamina.blocked = false;
         }
     }
 }
@@ -115,18 +138,23 @@ fn spawn_player_by_event(
             Dog,
             Velocity::default(),
             GameStuff,
+            Stamina {
+                value: 1.0,
+                blocked: false
+            },
         ));
     }
     event_reader.clear();
 }
 
 fn player_movemnt_by_mouse(
-    mut player_query: Query<(&Transform, &mut Velocity), With<Player>>,
+    mut player_query: Query<(&Transform, &mut Velocity, &mut Stamina), With<Player>>,
     time: Res<Time>,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
+    input: Res<Input<KeyCode>>
 ) {
-    let Ok((transform, mut vel)) = player_query.get_single_mut() else {
+    let Ok((transform, mut vel, mut stamine)) = player_query.get_single_mut() else {
         return;
     };
 
@@ -147,9 +175,23 @@ fn player_movemnt_by_mouse(
         return;
     };
 
+    let mut use_stamina = input.pressed(KeyCode::ShiftLeft);
+    if stamine.blocked {
+        use_stamina = false;
+    }
+
+    if use_stamina {
+        stamine.value -= time.delta_seconds() * STAMINA_DECREASE;
+        if stamine.value < 0.0 {
+            stamine.blocked = true;
+        }
+    }
+
+    let speed_k = if use_stamina { 1.0 } else {RUN_K};
+
     let globel_cursor = ray.get_point(distance);
 
-    let speed: f32 = DOG_SPEED;
+    let speed: f32 = DOG_SPEED * speed_k;
     let accel: f32 = DOG_ACCELERATION;
 
     let dir = (globel_cursor - transform.translation).normalize_or_zero();
@@ -182,15 +224,14 @@ pub fn bark(
 }
 
 fn player_movemnt_by_wasd(
-    mut player_query: Query<&mut Velocity, With<Player>>,
+    mut player_query: Query<(&mut Velocity, &mut Stamina), With<Player>>,
     input: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
-    let Ok(mut player) = player_query.get_single_mut() else {
+    let Ok((mut player, mut stamina)) = player_query.get_single_mut() else {
         return;
     };
 
-    let speed = DOG_SPEED;
     let accel = DOG_ACCELERATION;
 
     let mut dir = Vec3::ZERO;
@@ -210,6 +251,25 @@ fn player_movemnt_by_wasd(
     if input.pressed(KeyCode::D) {
         dir += Vec3::new(1.0, 0.0, 0.0);
     }
+
+    let mut use_stamina = input.pressed(KeyCode::ShiftLeft);
+
+    if stamina.blocked {
+        use_stamina = false;
+    }
+
+    if use_stamina {
+        stamina.value -= time.delta_seconds() * STAMINA_DECREASE;
+        if stamina.value < 0.0 {
+            stamina.blocked = true;
+        }
+    }
+
+    let speed = if use_stamina {
+        DOG_SPEED * RUN_K
+    } else {
+        DOG_SPEED
+    };
 
     dir = dir.normalize_or_zero();
 
