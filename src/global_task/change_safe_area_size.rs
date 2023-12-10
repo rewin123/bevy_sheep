@@ -27,7 +27,7 @@ pub struct ChangeSafeArea {
     pub start_area: SafeArea
 }
 
-const CHANGE_DURATION: f32 = 15.0;
+const CHANGE_DURATION: f32 = 60.0;
 
 fn start_change_safe_area(
     mut commands: Commands,
