@@ -35,9 +35,9 @@ fn setup_main_menu(mut commands: Commands) {
         ))
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
-                "You are a shepherd dog servant of a vampire shepherd. \n
-Don't let the sheep flock run away and be eaten by wolves, and fulfill the vampire's tasks. \n
-If you fail, you will be replaced. \n
+                "You're a shepherd's dog. Your master is a vampire. Don't ask why, you're just a dog. \n
+Don't let the sheep flock run away and get eaten by wolves. Complete your master's tasks. \n
+If you fail, you'll be replaced. Or whatever your bloodhungry master deems to think will be justified punishment. So... Be a good dog. \n
 Good luck!\n",
                 TextStyle::default(),
             ));
