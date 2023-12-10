@@ -3,11 +3,12 @@ use bevy::prelude::*;
 use crate::{
     common_storage::CommonStorage,
     get_sprite_rotation,
+    global_task::torch_blinking::TorchDelight,
     physics::{Velocity, WalkController},
-    player::{DOG_ACCELERATION, DOG_SPEED, Bark},
+    player::{Bark, DOG_ACCELERATION, DOG_SPEED},
     sunday::DayState,
     torch::{IgniteTorch, TorchBase},
-    GameSet, global_task::torch_blinking::TorchDelight, GameStuff,
+    GameSet, GameStuff,
 };
 
 const SHEPHERD_PATH: &str = "test/Knight.png";
@@ -113,7 +114,7 @@ fn spawn_shepherd_system(
                 acceleration: SHEPHERD_ACCEL,
                 target_velocity: Vec3::ZERO,
             },
-            GameStuff
+            GameStuff,
         ));
     }
     events.clear();

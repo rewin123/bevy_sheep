@@ -177,7 +177,15 @@ fn go_out_system(
 
 fn run_out_system(
     mut commands: Commands,
-    mut wolfs: Query<(Entity, &Transform, &mut WalkController, Option<&TryToCatchSheep>), (With<Wolf>, Without<GoOut>)>,
+    mut wolfs: Query<
+        (
+            Entity,
+            &Transform,
+            &mut WalkController,
+            Option<&TryToCatchSheep>,
+        ),
+        (With<Wolf>, Without<GoOut>),
+    >,
     safearea: Query<&SafeArea>,
 ) {
     for (wolf, wolf_transform, mut walk_controller, catch) in wolfs.iter_mut() {
@@ -190,7 +198,11 @@ fn run_out_system(
         if let Some(area) = in_safe_area.last() {
             walk_controller.target_velocity =
                 (wolf_transform.translation - area.get_center()).normalize() * WOLF_SPEED;
-            commands.entity(wolf).insert(GoOut).remove::<TryToCatchSheep>().remove::<Eating>();
+            commands
+                .entity(wolf)
+                .insert(GoOut)
+                .remove::<TryToCatchSheep>()
+                .remove::<Eating>();
 
             if let Some(catch) = catch {
                 commands.entity(catch.target).remove::<UnderHunting>();

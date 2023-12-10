@@ -3,8 +3,9 @@ use bevy::prelude::*;
 use crate::{
     common_storage::CommonStorage,
     get_sprite_rotation,
+    global_task::torch_blinking::TorchDelight,
     safe_area::{HiddenSafeArea, SafeArea},
-    GameSet, GameStuff, global_task::torch_blinking::TorchDelight,
+    GameSet, GameStuff,
 };
 
 const TORCH_PATH: &str = "test/torch.png";

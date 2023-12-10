@@ -71,9 +71,7 @@ impl Default for NextTaskDelay {
     }
 }
 
-fn setup_delay(
-    mut delay : ResMut<NextTaskDelay>,
-) {
+fn setup_delay(mut delay: ResMut<NextTaskDelay>) {
     *delay = NextTaskDelay(10.0);
 }
 
@@ -89,9 +87,8 @@ fn storyteller_system(
     mut next_task: ResMut<NextState<GlobalTask>>,
     day_state: Res<State<DayState>>,
     episode_time: Res<EpisodeTime>,
-    mut delay : ResMut<NextTaskDelay>
+    mut delay: ResMut<NextTaskDelay>,
 ) {
-
     if *current_task != GlobalTask::None {
         return;
     }
@@ -122,7 +119,7 @@ fn storyteller_system(
                 } else if rand_choise == 1 {
                     next_task.set(GlobalTask::TorchProblem);
                 }
-            },
+            }
         }
     }
 }

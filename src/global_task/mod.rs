@@ -1,7 +1,7 @@
 pub mod collect_sheep_in_area;
 pub mod sheep_escape;
-pub mod wolf_attack;
 pub mod torch_blinking;
+pub mod wolf_attack;
 
 use bevy::prelude::*;
 
