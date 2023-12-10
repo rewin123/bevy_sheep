@@ -152,7 +152,7 @@ pub fn setup(
     commands
         .spawn(safe_area.clone())
         .insert(LandSafeArea {
-            start_area: safe_area.clone(),
+            start_area: safe_area,
         })
         .insert(GameStuff);
 

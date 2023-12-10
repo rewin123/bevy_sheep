@@ -1,19 +1,17 @@
-use std::{
-    f32::consts::{E, PI},
-    time::Duration,
-};
+use std::{f32::consts::PI, time::Duration};
 
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::{
     get_sprite_rotation,
+    global_task::sheep_escape::ShawshankRedemption,
     physics::{Velocity, WalkController},
     player::{Bark, Dog, DOG_SPEED},
     safe_area::SafeArea,
     sprite_material::create_plane_mesh,
     test_level::LevelSize,
-    GameSet, GameStuff, global_task::sheep_escape::ShawshankRedemption,
+    GameSet, GameStuff,
 };
 
 use bevy_spatial::{
@@ -505,7 +503,7 @@ fn collect_field(
         ),
         With<Sheep>,
     >,
-    mut field: ResMut<NNTree>,
+    field: ResMut<NNTree>,
 ) {
     unsafe {
         for (t, vel, mut walk, _, dec) in sheep.iter_unsafe() {
@@ -547,17 +545,14 @@ fn collect_field(
                     let dist_force = 10.0 * distance_force;
                     let dz = Vec3::new(0.0, 0.0, sum_dz);
 
-                    let wsum = vel.0.length()
-                        + dist_force.length()
-                        + dz.length();
+                    let wsum = vel.0.length() + dist_force.length() + dz.length();
                     let max_length = vel
                         .0
                         .length()
                         .max(mean_targets.length())
                         .max(dist_force.length());
-                    walk.target_velocity = (vel.0 + dist_force + dz)
-                        / (wsum + 0.000001)
-                        * max_length;
+                    walk.target_velocity =
+                        (vel.0 + dist_force + dz) / (wsum + 0.000001) * max_length;
                 } else {
                     walk.target_velocity = vel.0;
                 }

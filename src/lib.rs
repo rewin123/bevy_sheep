@@ -3,6 +3,7 @@
 pub mod common_storage;
 pub mod debug_diagnostic;
 pub mod finish_screen;
+pub mod global_task;
 pub mod level_ui;
 pub mod menu;
 pub mod physics;
@@ -16,7 +17,6 @@ pub mod sunday;
 pub mod test_level;
 pub mod torch;
 pub mod wolf;
-pub mod global_task;
 
 use std::f32::consts::PI;
 
