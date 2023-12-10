@@ -2,7 +2,7 @@ use bevy::{
     input::mouse::MouseWheel,
     pbr::{CascadeShadowConfig, CascadeShadowConfigBuilder},
     prelude::*,
-    window::PrimaryWindow,
+    window::PrimaryWindow, audio::{Volume, PlaybackMode},
 };
 
 use crate::{
@@ -20,6 +20,9 @@ pub const DOG_ACCELERATION: f32 = DOG_SPEED * 4.0;
 pub const RUN_K: f32 = 2.0;
 pub const STAMINA_INCREASE: f32 = 1.0 / 2.5;
 pub const STAMINA_DECREASE: f32 = 1.0 / 5.0 + STAMINA_INCREASE;
+
+pub const DOG_RUN_PATH: &str = "audio/running-in-grass.ogg";
+pub const BARK_PATH: &str = "audio/barking.ogg";
 
 pub struct PlayerPlugin;
 
@@ -102,6 +105,18 @@ pub struct Bark {
     pub position: Vec3,
 }
 
+#[derive(Resource)]
+pub struct DogSounds {
+    pub bark: Handle<AudioSource>,
+    pub run: Handle<AudioSource>,
+}
+
+#[derive(Component)]
+pub struct DogBarkSource;
+
+#[derive(Component)]
+pub struct FootstepsSource;
+
 fn spawn_player_by_event(
     mut commands: Commands,
     mut event_reader: EventReader<SpawnPlayer>,
@@ -142,8 +157,41 @@ fn spawn_player_by_event(
                 value: 1.0,
                 blocked: false
             },
-        ));
+        )).with_children(|parent| {
+            parent.spawn((
+                DogBarkSource,
+                AudioBundle {
+                    source: asset_server.load(BARK_PATH),
+                    settings: PlaybackSettings {
+                        paused: true,
+                        mode: PlaybackMode::Loop,
+                        volume: Volume::new_relative(0.5),
+                        ..default()
+                    }
+                },
+                SpatialBundle::default(),
+            ));
+
+            parent.spawn((
+                FootstepsSource,
+                AudioBundle {
+                    source: asset_server.load(DOG_RUN_PATH),
+                    settings: PlaybackSettings {
+                        paused: true,
+                        mode: PlaybackMode::Loop,
+                        volume: Volume::new_relative(2.0),
+                        ..default()
+                    }
+                }
+            ));
+        });
     }
+
+    commands.insert_resource(DogSounds {
+        bark: asset_server.load(BARK_PATH),
+        run: asset_server.load(DOG_RUN_PATH),
+    });
+
     event_reader.clear();
 }
 
@@ -152,9 +200,14 @@ fn player_movemnt_by_mouse(
     time: Res<Time>,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
-    input: Res<Input<KeyCode>>
+    input: Res<Input<KeyCode>>,
+    mut footstep_source: Query<&mut AudioSink, With<FootstepsSource>>,
 ) {
     let Ok((transform, mut vel, mut stamine)) = player_query.get_single_mut() else {
+        return;
+    };
+
+    let Ok(mut footstep) = footstep_source.get_single_mut() else {
         return;
     };
 
@@ -204,22 +257,69 @@ fn player_movemnt_by_mouse(
     vel.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
 
     vel.0 = vel.0.clamp_length_max(speed);
+
+    if vel.0.length() > 0.01 {
+        footstep.play();
+    } else {
+        footstep.pause();
+    }
 }
 
 pub fn bark(
     player_query: Query<&Transform, With<Player>>,
     input: Res<Input<KeyCode>>,
     mut event_writer: EventWriter<Bark>,
+    mut stamina : Query<&mut Stamina>,
+    time : Res<Time>,
+    bark_sink : Query<&AudioSink, With<DogBarkSource>>,
 ) {
     let Ok(bark) = player_query.get_single() else {
         return;
     };
 
-    if input.pressed(KeyCode::Space) {
+    let Ok(mut stamina) = stamina.get_single_mut() else {
+        return;
+    };
+
+    let mut radius = 10.;
+
+    let mut play_bark = false;
+
+    if input.pressed(KeyCode::ControlLeft) && !stamina.blocked {
+        radius *= 1.5;
+        stamina.value -= STAMINA_DECREASE * 3.0 * time.delta_seconds();
+
+        if stamina.value < 0.0 {
+            stamina.blocked = true;
+        }
+
         event_writer.send(Bark {
-            radius: 10.,
+            radius: radius,
             position: bark.translation,
         });
+        play_bark = true;
+    }
+
+    if input.pressed(KeyCode::Space) {
+        event_writer.send(Bark {
+            radius: radius,
+            position: bark.translation,
+        });
+        play_bark = true;
+    }
+
+    if play_bark {
+        let Ok(bark) = bark_sink.get_single() else {
+            warn!("Could not get bark source");
+            return;
+        };
+        bark.play();
+    } else {
+        let Ok(bark) = bark_sink.get_single() else {
+            warn!("Could not get bark source");
+            return;
+        };
+        bark.pause();
     }
 }
 
@@ -227,8 +327,14 @@ fn player_movemnt_by_wasd(
     mut player_query: Query<(&mut Velocity, &mut Stamina), With<Player>>,
     input: Res<Input<KeyCode>>,
     time: Res<Time>,
+    mut footstep_source: Query<&mut AudioSink, With<FootstepsSource>>
 ) {
     let Ok((mut player, mut stamina)) = player_query.get_single_mut() else {
+        return;
+    };
+
+    let Ok(mut footstep) = footstep_source.get_single_mut() else {
+        warn!("Could not get footstep source");
         return;
     };
 
@@ -282,6 +388,12 @@ fn player_movemnt_by_wasd(
     player.0 += dspeed.normalize_or_zero() * accel * time.delta_seconds();
 
     player.0 = player.0.clamp_length_max(speed);
+
+    if player.0.length() > 0.01 {
+        footstep.play();
+    } else {
+        footstep.pause();
+    }
 }
 
 fn camera_movement(

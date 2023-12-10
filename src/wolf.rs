@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, audio::Volume};
 use bevy_egui::egui::Options;
 
 use crate::{
@@ -79,7 +79,12 @@ fn wolf_spawner(
     level_size: Res<LevelSize>,
     common_storage: Res<CommonStorage>,
     wolf_storage: Res<WolfStorage>,
+    wolfs : Query<(), With<Wolf>>
 ) {
+    let num_wolfs = wolfs.iter().count();
+    if num_wolfs > 20 {
+        return;
+    }
     for (sheep_entity, sheep_transform) in sheep.iter() {
         commands.spawn((
             Wolf,
@@ -112,6 +117,7 @@ fn catch_system(
     mut commands: Commands,
     sheep: Query<&Transform>,
     mut wolfs: Query<(Entity, &Transform, &mut WalkController, &TryToCatchSheep)>,
+    asset_server : Res<AssetServer>,
 ) {
     for (wolf, wolf_transform, mut walk_controller, try_to_catch_sheep) in wolfs.iter_mut() {
         let wolf_translation = wolf_transform.translation;
@@ -119,12 +125,22 @@ fn catch_system(
             if wolf_translation.distance(sheep.translation) < 1.0 {
                 commands
                     .entity(wolf)
-                    .insert(Eating { time: 10.0 })
+                    .insert(Eating { time: 2.0 })
                     .remove::<TryToCatchSheep>();
 
                 commands
                     .entity(try_to_catch_sheep.target)
                     .despawn_recursive();
+
+                commands.spawn(AudioBundle {
+                    source: asset_server.load("audio/kill_sound.ogg"),
+                    settings: PlaybackSettings {
+                        mode: bevy::audio::PlaybackMode::Once,
+                        volume: Volume::new_relative(0.7),
+                        spatial: true,
+                        ..default()
+                    },
+                });
             } else {
                 walk_controller.target_velocity =
                     (sheep.translation - wolf_translation).normalize() * WOLF_SPEED;

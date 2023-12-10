@@ -382,17 +382,17 @@ pub fn update_scared_sheeps(
 
             let nearest = field.k_nearest_neighbour(t.translation, 7);
             let mut mean_nearest_sheep = Vec3::ZERO;
-            let mut count = 0;
+            let mut count = 0.0;
             for (pos, _) in nearest.iter().skip(1) {
                 if (*pos - t.translation).length() < 5.0 {
                     let ddog = *pos - dog_transform.translation;
                     if ddog.dot(dog_dpos) >= 0.0 {
                         mean_nearest_sheep += *pos;
-                        count += 1;
+                        count += 1.0;
                     }
                 }
             }
-            if count > 0 {
+            if count > 0.0 {
                 let mean_nearest_sheep = mean_nearest_sheep / (count as f32);
                 if (mean_nearest_sheep - dog_transform.translation).length() < dog_dpos.length() {
                     walk.0 = (mean_nearest_sheep - dog_transform.translation).normalize_or_zero() * speed_amount;

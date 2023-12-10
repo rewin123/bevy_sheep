@@ -17,6 +17,7 @@ pub mod sunday;
 pub mod test_level;
 pub mod torch;
 pub mod wolf;
+pub mod ambient;
 
 use std::f32::consts::PI;
 
@@ -101,6 +102,10 @@ impl Plugin for GamePlugin {
             shepherd::ShepherdPlugin,
             global_task::GlobalTaskPlugin,
         ));
+
+        app.add_plugins(
+            ambient::AmbientPlugin
+        );
 
         //For long term updates
         app.insert_resource(Time::<Fixed>::from_seconds(1.0));
