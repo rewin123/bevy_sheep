@@ -17,7 +17,7 @@ const DOG_PATH: &str = "test/dog.png";
 pub const DOG_SPEED: f32 = 45.0 * 1000.0 / 3600.0; // Sheepdog accepts 35 km/h in reality (but fastest dog can do 67 km/h o.0)
 pub const DOG_ACCELERATION: f32 = DOG_SPEED * 4.0;
 
-pub const RUN_K: f32 = 1.5;
+pub const RUN_K: f32 = 2.0;
 pub const STAMINA_INCREASE: f32 = 1.0 / 2.5;
 pub const STAMINA_DECREASE: f32 = 1.0 / 5.0 + STAMINA_INCREASE;
 
