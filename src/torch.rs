@@ -4,12 +4,13 @@ use crate::{
     common_storage::CommonStorage,
     get_sprite_rotation,
     safe_area::{HiddenSafeArea, SafeArea},
-    GameSet, GameStuff,
+    GameSet, GameStuff, global_task::torch_blinking::TorchDelight,
 };
 
 const TORCH_PATH: &str = "test/torch.png";
 
-const TORCH_ILLUMINATION: f32 = 10000.0;
+pub const TORCH_ILLUMINATION: f32 = 10000.0;
+pub const TORCH_BASE_RADIUS: f32 = 10.0;
 
 pub struct TorchPlugin;
 
@@ -64,7 +65,7 @@ fn spawn_torch(
     torch_material: Res<TorchMaterial>,
 ) {
     for event in events.read() {
-        let torch_radius = 10.0;
+        let torch_radius = TORCH_BASE_RADIUS;
         let smooth_radius = torch_radius + 0.01;
         let light_height = torch_radius * 0.5;
 
@@ -141,7 +142,12 @@ fn ignite_torch(
                             pos: Vec2::new(transform.translation.x, transform.translation.z),
                             radius: torch.radius,
                         })
-                        .insert(HiddenSafeArea);
+                        .insert(HiddenSafeArea)
+                        .remove::<TorchDelight>();
+
+                    light.outer_angle = 2.0_f32.atan();
+                    light.inner_angle = light.outer_angle * 0.95;
+                    light.color = torch.color;
                 };
             }
         }

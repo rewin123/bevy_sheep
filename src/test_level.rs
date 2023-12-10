@@ -10,7 +10,7 @@ use crate::{
     shepherd::SpawnShepherd,
     sprite_material::create_plane_mesh,
     sunday::{AMBIENT_BASE_ILLUMINANCE, DAY_SUN_COLOR, SUN_BASE_ILLUMINANCE},
-    torch::SpawnTorch,
+    torch::{SpawnTorch, TORCH_BASE_RADIUS},
     GameStuff,
 };
 
@@ -124,6 +124,7 @@ pub fn setup(
 
     let num_of_torchs = 20;
     let torch_r = r / 2.0;
+    let mut torch_poses = vec![];
     for _ in 0..num_of_torchs {
         let pos = Vec3::new(
             rng.gen_range(-torch_r..torch_r),
@@ -131,7 +132,17 @@ pub fn setup(
             rng.gen_range(-torch_r..torch_r),
         );
 
+        let mut neared_dist_to_another_torch = f32::MAX;
+        for torch_pos in &torch_poses {
+            let dist = pos.distance(*torch_pos);
+            neared_dist_to_another_torch = neared_dist_to_another_torch.min(dist);
+        }
+        if neared_dist_to_another_torch < TORCH_BASE_RADIUS {
+            continue;
+        }
+
         spawn_torch.send(SpawnTorch { position: pos });
+        torch_poses.push(pos);
     }
 
     let safe_area = SafeArea::Rect {

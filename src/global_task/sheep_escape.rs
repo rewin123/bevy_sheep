@@ -5,7 +5,6 @@ use crate::{storyteller::{Storyteller, GlobalTask, FailReason}, sunday::{DayStat
 
 pub struct SheepEscapePlugin;
 
-
 impl Plugin for SheepEscapePlugin {
     fn build(&self, app: &mut App) {
         app
@@ -104,11 +103,11 @@ fn generate_new_wave(
     if *day_state == DayState::Day {
         let sheep_count = sheep.iter().count() as f32;
         let c = sheep_count * episode_time * 0.2 + 1.0;
-        let mut dt = 15.0 - 3.0 * episode_time;
+        let mut dt = 5.0 - 1.0 * episode_time;
         let n = 1.0 + 1.0 * episode_time;
 
         if level_time < 5.0 {
-            dt = 5.0;
+            dt = 2.0;
         }
 
         next_wave.0 = Some(SheepWave {

@@ -4,16 +4,16 @@ use crate::{
     common_storage::CommonStorage,
     get_sprite_rotation,
     physics::{Velocity, WalkController},
-    player::{DOG_ACCELERATION, DOG_SPEED},
+    player::{DOG_ACCELERATION, DOG_SPEED, Bark},
     sunday::DayState,
     torch::{IgniteTorch, TorchBase},
-    GameSet,
+    GameSet, global_task::torch_blinking::TorchDelight, GameStuff,
 };
 
 const SHEPHERD_PATH: &str = "test/Knight.png";
 
-const SHEPHERD_SPEED: f32 = DOG_SPEED * 0.5;
-const SHEPHERD_ACCEL: f32 = DOG_ACCELERATION * 0.5;
+const SHEPHERD_SPEED: f32 = DOG_SPEED * 0.4;
+const SHEPHERD_ACCEL: f32 = DOG_ACCELERATION * 0.4;
 
 const IGNITE_RADIUS: f32 = 5.0;
 
@@ -24,7 +24,7 @@ impl Plugin for ShepherdPlugin {
         app.add_event::<SpawnShepherd>()
             .add_systems(
                 Update,
-                (spawn_shepherd_system, ignite_all_torhes).in_set(GameSet::Playing),
+                (spawn_shepherd_system, ignite_all_torhes, bark_system).in_set(GameSet::Playing),
             )
             .add_systems(OnEnter(DayState::Evening), start_ignite_torches);
     }
@@ -50,7 +50,7 @@ fn start_ignite_torches(mut commands: Commands, query: Query<Entity, With<Shephe
 fn ignite_all_torhes(
     mut commands: Commands,
     mut query: Query<(Entity, &mut WalkController, &Transform), With<IgniteAllTorhes>>,
-    torches: Query<(&Transform, &TorchBase)>,
+    torches: Query<(&Transform, &TorchBase, Option<&TorchDelight>)>,
     mut ignite: EventWriter<IgniteTorch>,
 ) {
     let Ok((herd_entity, mut walk_controller, transform)) = query.get_single_mut() else {
@@ -61,9 +61,9 @@ fn ignite_all_torhes(
     let mut nearest_torch: Option<Vec3> = None;
     let mut nearest_torch_data: Option<&TorchBase> = None;
     let mut dist = f32::MAX;
-    for (torch_transform, torch) in torches.iter() {
+    for (torch_transform, torch, delight) in torches.iter() {
         let dist_to_torch = (torch_transform.translation - transform.translation).length();
-        if dist_to_torch < dist && !torch.lit {
+        if dist_to_torch < dist && (!torch.lit || delight.is_some()) {
             nearest_torch = Some(torch_transform.translation);
             nearest_torch_data = Some(torch);
             dist = dist_to_torch;
@@ -113,7 +113,24 @@ fn spawn_shepherd_system(
                 acceleration: SHEPHERD_ACCEL,
                 target_velocity: Vec3::ZERO,
             },
+            GameStuff
         ));
     }
     events.clear();
+}
+
+fn bark_system(
+    mut commands: Commands,
+    mut events: EventReader<Bark>,
+    query: Query<(Entity, &Transform), With<Shepherd>>,
+) {
+    let Ok((entity, transform)) = query.get_single() else {
+        return;
+    };
+    for event in events.iter() {
+        if (transform.translation - event.position).length() < event.radius {
+            //wakeup shepherd
+            commands.entity(entity).insert(IgniteAllTorhes);
+        }
+    }
 }

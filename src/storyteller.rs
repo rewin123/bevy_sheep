@@ -38,6 +38,8 @@ impl Plugin for StorytellerPlugin {
             FixedUpdate,
             (score_system, fail_system).in_set(GameSet::Playing),
         )
+        .init_resource::<NextTaskDelay>()
+        .add_systems(OnEnter(GlobalTask::None), setup_delay)
         .add_state::<GlobalTask>();
     }
 }
@@ -67,6 +69,21 @@ fn setup_start_time(mut commands: Commands, mut teller: ResMut<Storyteller>, tim
     teller.level_start_time = time.elapsed_seconds();
 }
 
+#[derive(Resource)]
+pub struct NextTaskDelay(pub f32);
+
+impl Default for NextTaskDelay {
+    fn default() -> Self {
+        Self(10.0)
+    }
+}
+
+fn setup_delay(
+    mut delay : ResMut<NextTaskDelay>,
+) {
+    *delay = NextTaskDelay(10.0);
+}
+
 fn storyteller_system(
     mut commands: Commands,
     sheep: Query<(Entity, &Transform), (With<Sheep>, Without<IsScared>, Without<GoTo>)>,
@@ -79,7 +96,9 @@ fn storyteller_system(
     mut next_task: ResMut<NextState<GlobalTask>>,
     day_state: Res<State<DayState>>,
     episode_time: Res<EpisodeTime>,
+    mut delay : ResMut<NextTaskDelay>
 ) {
+
     if *current_task != GlobalTask::None {
         return;
     }
@@ -88,6 +107,10 @@ fn storyteller_system(
         return;
     };
     if *current_task == GlobalTask::None {
+        delay.0 -= time.delta_seconds();
+        if delay.0 > 0.0 {
+            return;
+        }
         let level_time = time.elapsed_seconds() - teller.level_start_time;
         let unfiorm_time = level_time / teller.level_duration;
 
@@ -101,7 +124,8 @@ fn storyteller_system(
 
             },
             DayState::Night => {
-                next_task.set(GlobalTask::SheepEscape);
+                // next_task.set(GlobalTask::SheepEscape);
+                next_task.set(GlobalTask::TorchProblem);
             },
         }
     } 

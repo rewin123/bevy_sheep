@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_egui::egui::Options;
 
 use crate::{
     common_storage::CommonStorage,
@@ -176,10 +177,10 @@ fn go_out_system(
 
 fn run_out_system(
     mut commands: Commands,
-    mut wolfs: Query<(Entity, &Transform, &mut WalkController), (With<Wolf>, Without<GoOut>)>,
+    mut wolfs: Query<(Entity, &Transform, &mut WalkController, Option<&TryToCatchSheep>), (With<Wolf>, Without<GoOut>)>,
     safearea: Query<&SafeArea>,
 ) {
-    for (wolf, wolf_transform, mut walk_controller) in wolfs.iter_mut() {
+    for (wolf, wolf_transform, mut walk_controller, catch) in wolfs.iter_mut() {
         let in_safe_area = safearea.iter().filter(|area| {
             area.in_area(Vec2 {
                 x: wolf_transform.translation.x,
@@ -189,7 +190,11 @@ fn run_out_system(
         if let Some(area) = in_safe_area.last() {
             walk_controller.target_velocity =
                 (wolf_transform.translation - area.get_center()).normalize() * WOLF_SPEED;
-            commands.entity(wolf).insert(GoOut);
+            commands.entity(wolf).insert(GoOut).remove::<TryToCatchSheep>().remove::<Eating>();
+
+            if let Some(catch) = catch {
+                commands.entity(catch.target).remove::<UnderHunting>();
+            }
         }
     }
 }
