@@ -76,7 +76,7 @@ pub fn setup(
     let cut_r = r + 5.0;
 
     let tree_area_size = PI * tree_r * tree_r - PI * cut_r * cut_r;
-    let tree_per_meter = 0.5;
+    let tree_per_meter = 0.3;
     let tree_count = (tree_area_size * tree_per_meter) as usize;
 
     for _ in 0..tree_count {
@@ -95,7 +95,7 @@ pub fn setup(
                 material: tree_material.clone(),
                 transform: Transform::from_xyz(pos.x, pos.y, pos.z)
                     .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::new(2.5, 2.6, 5.0)),
+                    .with_scale(Vec3::new(2.5, 2.6, 5.0) * 2.0),
                 ..default()
             })
             .insert(GameStuff);

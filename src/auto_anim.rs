@@ -56,7 +56,7 @@ fn init_storage<T : AnimSet + Send + Sync + 'static>(
     for i in 0..T::get_tile_count() {
         ms.push(materials.add(StandardMaterial {
             base_color_texture: Some(asset_server.load(T::get_tile_path(i))),
-            alpha_mode: AlphaMode::Blend,
+            alpha_mode: AlphaMode::Opaque,
             reflectance: 0.1,
             double_sided: true,
             cull_mode: None,

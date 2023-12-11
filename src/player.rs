@@ -517,10 +517,10 @@ fn set_anim_state(
         }
     }
 
-    if vel.0.x > 0.1 {
+    if vel.0.x > 0.5 {
         t.rotation = get_sprite_rotation();
         t.rotate_local_z(PI);
-    } else if vel.0.x < -0.1 {
+    } else if vel.0.x < -0.5 {
         t.rotation = get_sprite_rotation();
     }
 }

@@ -384,18 +384,17 @@ pub fn update_scared_sheeps(
             &mut SheepTargetVel,
             &mut Decision,
             &mut IsScared,
+            &NearestSheep
         ),
         With<Sheep>,
     >,
     dog: Query<&Transform, With<Dog>>,
-    safeareas: Query<&SafeArea>,
-    field: ResMut<NNTree>,
 ) {
     let Ok(dog_transform) = dog.get_single() else {
         return;
     };
 
-    for (e, t, mut walk, mut dec, mut scare) in sheeps.iter_mut() {
+    for (e, t, mut walk, mut dec, mut scare, nearest) in sheeps.iter_mut() {
         if scare.time > 3. {
             *dec = Decision::Idle;
             walk.0 = Vec3::ZERO;
@@ -412,7 +411,7 @@ pub fn update_scared_sheeps(
                 + SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER)
                 .max(SHEEP_SPEED * RANDOM_WALK_SPEED_MULTIPLIER);
 
-            let nearest = field.k_nearest_neighbour(t.translation, 7);
+            let nearest = &nearest.0;
             let mut mean_nearest_sheep = Vec3::ZERO;
             let mut count = 0.0;
             for (pos, _) in nearest.iter().skip(1) {
@@ -477,7 +476,7 @@ pub fn setup(
         }
 
         commands.spawn((
-            PbrBundle {
+            MaterialMeshBundle {
                 mesh: square.clone(),
                 material: sheep_material.clone(),
                 transform: Transform::from_xyz(pos.x, pos.y, pos.z)
@@ -571,15 +570,15 @@ fn collect_field(
             &mut WalkController,
             &Velocity,
             &Decision,
+            &NearestSheep
         ),
         With<Sheep>,
     >,
-    field: ResMut<NNTree>,
 ) {
     unsafe {
-        for (t, vel, mut walk, _, dec) in sheep.iter_unsafe() {
+        for (t, vel, mut walk, _, dec, nearest) in sheep.iter_unsafe() {
             if *dec != Decision::Idle {
-                let neighboors = field.k_nearest_neighbour(t.translation, 7);
+                let neighboors = &nearest.0;
 
                 let mut sum = Vec3::ZERO;
                 let mut distance_force = Vec3::ZERO;
@@ -591,7 +590,7 @@ fn collect_field(
                 let mut count = 0;
                 for (_, n_e) in neighboors.iter().skip(1) {
                     if let Some(n_e) = n_e {
-                        if let Ok((n_t, n_tar, _, n_vel, _)) = sheep.get(*n_e) {
+                        if let Ok((n_t, n_tar, _, n_vel, _, _)) = sheep.get(*n_e) {
                             sum += n_vel.0;
                             count += 1;
 

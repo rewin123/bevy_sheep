@@ -23,7 +23,6 @@ lto = "thin"
 [features]
 dev = [
     "bevy/dynamic_linking",
-    "dep:bevy-inspector-egui"
 ]
 
 # All of Bevy's default features exept for the audio related ones (bevy_audio, vorbis), since they clash with bevy_kira_audio
@@ -37,9 +36,8 @@ webbrowser = { version = "0.8", features = ["hardened"] }
 # keep the following in sync with Bevy's dependencies
 winit = { version = "0.28.7", default-features = false }
 image = { version = "0.24", default-features = false }
-bevy_egui = "0.23.0"
-bevy-inspector-egui = {version = "0.21.0", optional = true }
 bevy_spatial = "0.7.0"
+bevy_embedded_assets = "0.9.1"
 
 [build-dependencies]
 embed-resource = "1.4"
