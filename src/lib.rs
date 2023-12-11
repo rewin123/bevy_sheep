@@ -18,6 +18,7 @@ pub mod test_level;
 pub mod torch;
 pub mod wolf;
 pub mod ambient;
+pub mod auto_anim;
 
 use std::f32::consts::PI;
 

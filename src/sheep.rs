@@ -1,4 +1,4 @@
-use std::{f32::consts::PI, time::Duration};
+use std::{f32::consts::PI, time::Duration, fmt::format};
 
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
@@ -11,7 +11,7 @@ use crate::{
     safe_area::SafeArea,
     sprite_material::create_plane_mesh,
     test_level::LevelSize,
-    GameSet, GameStuff,
+    GameSet, GameStuff, auto_anim::{AnimRange, AnimSet, AutoAnimPlugin, AutoAnim},
 };
 
 use bevy_spatial::{
@@ -19,6 +19,7 @@ use bevy_spatial::{
 };
 
 const SHEEP_PATH: &str = "test/sheep.png";
+const SHEEP_FOLDER_PATH: &str = "sheep/";
 
 pub const SHEEP_SPEED: f32 = DOG_SPEED * 0.5;
 const SHEEP_ACCELERATION: f32 = SHEEP_SPEED * 3.0;
@@ -75,7 +76,34 @@ impl Plugin for SheepPlugin {
                 .with_transform(TransformMode::Transform)
                 .with_spatial_ds(SpatialStructure::KDTree3),
         )
-        .add_systems(Update, collect_field);
+        .add_systems(Update, collect_field)
+        .add_plugins(AutoAnimPlugin::<SheepAnim>::default());
+    }
+}
+
+#[derive(Default)]
+pub enum SheepAnim {
+    #[default]
+    Idle,
+    Walk,
+    Feed
+}
+
+impl AnimSet for SheepAnim {
+    fn get_folder_path() -> String {
+        format!("sheep")
+    }
+
+    fn get_index_range(&self) -> AnimRange {
+        match self {
+            SheepAnim::Idle => AnimRange::new(28, 39),
+            SheepAnim::Walk => AnimRange::new(23, 28),
+            SheepAnim::Feed => AnimRange::new(13, 16),
+        }
+    }
+
+    fn get_tile_count() -> usize {
+        40
     }
 }
 
@@ -450,7 +478,7 @@ pub fn setup(
                 material: sheep_material.clone(),
                 transform: Transform::from_xyz(pos.x, pos.y, pos.z)
                     .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::new(13.0 / 10.0, 1.0, 1.0)),
+                    .with_scale(Vec3::new(1.0, 1.0, 1.0) * 1.7),
                 ..default()
             },
             Sheep::default(),
@@ -463,6 +491,11 @@ pub fn setup(
             },
             SheepTargetVel::default(),
             GameStuff,
+            AutoAnim {
+                set: SheepAnim::Idle,
+                timer: Timer::from_seconds(0.1 + rng.gen_range(-0.01..=0.01), TimerMode::Repeating),
+                current_frame: 0
+            }
         ));
         exact_sheep_count += 1;
     }
