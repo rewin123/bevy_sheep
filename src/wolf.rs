@@ -121,7 +121,7 @@ fn wolf_spawner(
                     sheep_transform.translation.normalize() * level_size.0 * 2.0,
                 )
                 .with_rotation(get_sprite_rotation())
-                .with_scale(Vec3::new(1.0, 1.0, 1.0) * 3.0),
+                .with_scale(Vec3::new(1.0, 1.0, 1.0) * 2.0),
                 ..default()
             },
             TryToCatchSheep {
