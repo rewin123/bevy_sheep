@@ -464,7 +464,7 @@ pub fn setup(
 
     let mut exact_sheep_count = 0;
 
-    for _ in 0..sheep_count {
+    while exact_sheep_count < sheep_count {
         let x = rng.gen_range(-r..r);
         let y = 0.0;
         let z = rng.gen_range(-r..r);

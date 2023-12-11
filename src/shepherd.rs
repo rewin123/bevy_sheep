@@ -8,7 +8,7 @@ use crate::{
     player::{Bark, DOG_ACCELERATION, DOG_SPEED},
     sunday::DayState,
     torch::{IgniteTorch, TorchBase},
-    GameSet, GameStuff,
+    GameSet, GameStuff, auto_anim::{AutoAnimPlugin, AutoAnim, AnimSet, AnimRange},
 };
 
 const SHEPHERD_PATH: &str = "test/Knight.png";
@@ -25,9 +25,34 @@ impl Plugin for ShepherdPlugin {
         app.add_event::<SpawnShepherd>()
             .add_systems(
                 Update,
-                (spawn_shepherd_system, ignite_all_torhes, bark_system).in_set(GameSet::Playing),
+                (spawn_shepherd_system, ignite_all_torhes, bark_system, set_anim).in_set(GameSet::Playing),
             )
-            .add_systems(OnEnter(DayState::Evening), start_ignite_torches);
+            .add_systems(OnEnter(DayState::Evening), start_ignite_torches)
+            .add_plugins(AutoAnimPlugin::<ShepherdAnim>::default());
+    }
+}
+
+#[derive(Default)]
+pub enum ShepherdAnim {
+    #[default]
+    Sleep,
+    Walk
+}
+
+impl AnimSet for ShepherdAnim {
+    fn get_folder_path() -> String {
+        "shepherd".to_string()
+    }
+
+    fn get_index_range(&self) -> crate::auto_anim::AnimRange {
+        match self {
+            ShepherdAnim::Sleep => AnimRange::new(0, 19),
+            ShepherdAnim::Walk => AnimRange::new(20,27),
+        }
+    }
+
+    fn get_tile_count() -> usize {
+        37
     }
 }
 
@@ -100,7 +125,7 @@ fn spawn_shepherd_system(
             PbrBundle {
                 transform: Transform::from_translation(event.pos)
                     .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::new(1.0, 1.0, 2.0)),
+                    .with_scale(Vec3::new(3.0, 3.0, 3.0)),
                 material: materials.add(StandardMaterial {
                     base_color_texture: Some(asset_server.load(SHEPHERD_PATH)),
                     ..default()
@@ -115,6 +140,11 @@ fn spawn_shepherd_system(
                 target_velocity: Vec3::ZERO,
             },
             GameStuff,
+            AutoAnim {
+                set : ShepherdAnim::Sleep,
+                current_frame: 0,
+                timer: Timer::from_seconds(0.1, TimerMode::Repeating)
+            }
         ));
     }
     events.clear();
@@ -132,6 +162,18 @@ fn bark_system(
         if (transform.translation - event.position).length() < event.radius {
             //wakeup shepherd
             commands.entity(entity).insert(IgniteAllTorhes);
+        }
+    }
+}
+
+fn set_anim(
+    mut query : Query<(&mut AutoAnim<ShepherdAnim>, Option<&IgniteAllTorhes>)>
+) {
+    for (mut anim, ignite) in query.iter_mut() {
+        if ignite.is_some() {
+            anim.set = ShepherdAnim::Walk;
+        } else {
+            anim.set = ShepherdAnim::Sleep;
         }
     }
 }
