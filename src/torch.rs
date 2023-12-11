@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, audio::{PlaybackMode, Volume}};
 
 use crate::{
     common_storage::CommonStorage,
@@ -21,7 +21,48 @@ impl Plugin for TorchPlugin {
             .add_systems(Startup, setup_material)
             .add_systems(Update, spawn_torch)
             .add_event::<IgniteTorch>()
-            .add_systems(Update, ignite_torch.in_set(GameSet::Playing));
+            .add_systems(Update, ignite_torch.in_set(GameSet::Playing))
+            .add_systems(FixedUpdate, torch_audio.in_set(GameSet::Playing));
+    }
+}
+
+#[derive(Component)]
+pub struct TorchSound;
+
+fn torch_audio(
+    mut commands: Commands,
+    torches : Query<&TorchBase>,
+    torh_sound : Query<Entity, With<TorchSound>>,
+    asset_server : Res<AssetServer>
+) {
+    let mut is_lites = false;
+    for torch in torches.iter() {
+        if torch.lit {
+            is_lites = true;
+            break;
+        }
+    }
+
+    if is_lites {
+        if torh_sound.is_empty() {
+            commands.spawn((
+                AudioSourceBundle::<AudioSource> {
+                    source : asset_server.load("audio/torch.ogg"),
+                    settings : PlaybackSettings {
+                        mode : PlaybackMode::Loop,
+                        volume : Volume::new_relative(0.5),
+                        ..default()
+                    }
+                },
+                TorchSound
+            ));
+        }
+    } else {
+        if !torh_sound.is_empty() {
+            for sound in torh_sound.iter() {
+                commands.entity(sound).despawn_recursive();
+            }
+        }
     }
 }
 

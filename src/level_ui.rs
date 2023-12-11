@@ -54,11 +54,11 @@ fn create_level_ui_system(
         parent.spawn((
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(80.0),
+                    width: Val::Percent(60.0),
                     flex_direction: FlexDirection::Column,
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
-                    min_height: Val::Px(150.0),
+                    min_height: Val::Px(80.0),
                     ..default()
                 },
                 background_color: BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.5)),

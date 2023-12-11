@@ -151,7 +151,7 @@ fn level_timer(
             let time = format!("{:02}:{:02}", dur.as_secs() / 60, dur.as_secs() % 60);
             let score_text = format!("Score: {:.1}", score.0);
 
-            timer.sections[0].value = format!("{}\n{}", time, score_text);
+            timer.sections[0].value = format!("{} {}", time, score_text);
         } else {
             timer.sections[0].value = format!("{:02}:{:02}", 0, 0);
             next_state.set(GameState::Finish);
