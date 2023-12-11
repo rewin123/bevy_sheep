@@ -1,6 +1,6 @@
 use std::{f32::consts::PI, time::Duration, fmt::format};
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashSet};
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::{
@@ -79,7 +79,9 @@ impl Plugin for SheepPlugin {
         .add_systems(Update, collect_field)
         .add_plugins(AutoAnimPlugin::<SheepAnim>::default())
         
-        .add_systems(Update, set_anim_state.in_set(GameSet::Playing));
+        .add_systems(Update, set_anim_state.in_set(GameSet::Playing))
+        
+        .add_systems(Update, update_nearest);
     }
 }
 
@@ -497,7 +499,8 @@ pub fn setup(
                 set: SheepAnim::Idle,
                 timer: Timer::from_seconds(0.1 + rng.gen_range(-0.01..=0.01), TimerMode::Repeating),
                 current_frame: 0
-            }
+            },
+            NearestSheep::default()
         ));
         exact_sheep_count += 1;
     }
@@ -528,6 +531,37 @@ type NNTree = KDTree3<Sheep>;
 
 const PREFERED_DISTANCE: f32 = 1.0;
 const PREFERED_DY: f32 = 0.1;
+
+#[derive(Component, Default)]
+pub struct NearestSheep(pub Vec<(Vec3, Option<Entity>)>);
+
+#[derive(Component)]
+pub struct UpdatedSheep;
+
+fn update_nearest(
+    mut commands: Commands,
+    mut sheep : Query<(Entity, &Transform, &mut NearestSheep), (With<Sheep>, Without<UpdatedSheep>)>,
+    mut updated_sheep : Query<Entity, With<UpdatedSheep>>,
+    field: ResMut<NNTree>,
+) {
+    let max_sheep_count = 100;
+    let mut idx = 0;
+    for (e, t, mut nearest) in sheep.iter_mut() {
+        idx += 1;
+        if idx > max_sheep_count {
+            break;
+        }
+
+        nearest.0 = field.k_nearest_neighbour(t.translation, 7);
+        commands.entity(e).insert(UpdatedSheep);
+    }
+
+    if sheep.is_empty() {
+        for e in updated_sheep.iter() {
+            commands.entity(e).remove::<UpdatedSheep>();
+        }
+    }
+}
 
 fn collect_field(
     mut sheep: Query<

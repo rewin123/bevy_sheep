@@ -52,7 +52,7 @@ fn start_fire_problems(
     mut commands: Commands,
     torches: Query<(Entity, &SafeArea), With<TorchBase>>,
     episode_time: Res<EpisodeTime>,
-    sheep: Query<&Transform, With<Sheep>>,
+    sheep: Query<(Entity,&Transform), With<Sheep>>,
     mut global_task: ResMut<NextState<GlobalTask>>,
 ) {
     let torch_count = torches.iter().count();
@@ -65,20 +65,21 @@ fn start_fire_problems(
 
     let mut problem_torches = torches
         .iter()
-        .map(|(a, b)| (a, b, 0_usize))
+        .map(|(a, b)| (a, b, 0_usize, HashSet::new()))
         .collect::<Vec<_>>();
 
-    for (e, safe_area, count) in problem_torches.iter_mut() {
-        for sheep in sheep.iter() {
+    for (e, safe_area, count, set) in problem_torches.iter_mut() {
+        for (sheep_e, sheep) in sheep.iter() {
             if safe_area.in_area(Vec2::new(sheep.translation.x, sheep.translation.z)) {
                 *count = *count + 1;
+                set.insert(sheep_e);
             }
         }
     }
 
     let mut problem_torches = problem_torches
         .iter()
-        .filter(|(_, _, count)| *count > 0)
+        .filter(|(_, _, count, _)| *count > 0)
         .collect::<Vec<_>>();
 
     if (problem_torches.len() == 0) {
@@ -91,25 +92,25 @@ fn start_fire_problems(
         problem_torches.remove(i);
     }
 
-    let mut sheep_in_torches = 0;
+    let mut sheep_in_torches : HashSet<Entity> = HashSet::new();
 
-    for (idx, (e, safe_area, count)) in problem_torches.iter().enumerate() {
+    for (idx, (e, safe_area, count, set)) in problem_torches.iter().enumerate() {
         commands.entity(*e).insert(TorchDelight {
             be_scared_time: idx as f32 * 5.0,
             rest_time: change_time,
             change_duration: change_time,
         });
 
-        sheep_in_torches += *count;
+        sheep_in_torches.extend(set.iter());
     }
 
     commands.insert_resource(TorchDelightStatus {
         time_for_mission: 40.0,
         start_sheep_count: sheep.iter().count(),
-        max_dead_sheep: (sheep_in_torches / 2).max(10),
+        max_dead_sheep: (sheep_in_torches.len() / 2).max(10),
         torches_to_lit: problem_torches
             .iter()
-            .map(|(e, _, _)| *e)
+            .map(|(e, _, _, _)| *e)
             .collect::<Vec<_>>(),
     });
 

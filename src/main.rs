@@ -34,7 +34,14 @@ fn main() {
                     }),
                     ..default()
                 })
-                .set(ImagePlugin::default_nearest()),
+                .set(ImagePlugin::default_nearest())
+                .set(TaskPoolPlugin {
+                    task_pool_options: TaskPoolOptions {
+                        max_total_threads: 1,
+                        ..default()
+                    },
+                    ..default()
+                }),
         )
         .insert_resource(DirectionalLightShadowMap { size: 4096 })
         .add_plugins(GamePlugin)

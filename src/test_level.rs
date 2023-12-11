@@ -50,7 +50,7 @@ pub fn setup(
 
         cascade_shadow_config: cascades.build(),
         ..default()
-    });
+    }).insert(GameStuff);
 
     //ambient ligjt
     commands.insert_resource(AmbientLight {
