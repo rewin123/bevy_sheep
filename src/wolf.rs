@@ -9,7 +9,7 @@ use crate::{
     player::{Bark, DOG_SPEED},
     safe_area::{OutOfSafeArea, SafeArea},
     test_level::LevelSize,
-    GameStuff, auto_anim::{AnimSet, AnimRange, AutoAnimPlugin, AutoAnim},
+    GameStuff, auto_anim::{AnimSet, AnimRange, AutoAnimPlugin, AutoAnim}, corpse::SpawnCorpse,
 };
 
 const WOLF_SPEED: f32 = DOG_SPEED * 1.3;
@@ -121,7 +121,7 @@ fn wolf_spawner(
                     sheep_transform.translation.normalize() * level_size.0 * 2.0,
                 )
                 .with_rotation(get_sprite_rotation())
-                .with_scale(Vec3::new(1.0, 1.0, 1.0) * 2.0),
+                .with_scale(Vec3::new(1.0, 1.0, 1.0) * 3.0),
                 ..default()
             },
             TryToCatchSheep {
@@ -146,11 +146,14 @@ fn wolf_spawner(
     }
 }
 
+
+
 fn catch_system(
     mut commands: Commands,
     sheep: Query<&Transform>,
     mut wolfs: Query<(Entity, &Transform, &mut WalkController, &TryToCatchSheep)>,
     asset_server : Res<AssetServer>,
+    mut spawn_corpse : EventWriter<SpawnCorpse>
 ) {
     for (wolf, wolf_transform, mut walk_controller, try_to_catch_sheep) in wolfs.iter_mut() {
         let wolf_translation = wolf_transform.translation;
@@ -169,6 +172,8 @@ fn catch_system(
                 commands
                     .entity(try_to_catch_sheep.target)
                     .despawn_recursive();
+
+                spawn_corpse.send(SpawnCorpse { position: sheep.translation });
 
                 commands.spawn(AudioBundle {
                     source: asset_server.load("audio/kill_sound.ogg"),

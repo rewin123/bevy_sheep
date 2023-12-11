@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, render::render_resource::Face};
 
 use crate::GameSet;
 
@@ -39,7 +39,7 @@ fn auto_anim<T : AnimSet + Send + Sync + 'static>(
 ) {
     for (entity, mut auto_anim) in auto_anim_query.iter_mut() {
         if auto_anim.timer.tick(time.delta()).just_finished() {
-            auto_anim.current_frame = (auto_anim.current_frame + 1) % (auto_anim.set.get_index_range().end - auto_anim.set.get_index_range().start);
+            auto_anim.current_frame = (auto_anim.current_frame + 1) % (auto_anim.set.get_index_range().end + 1 - auto_anim.set.get_index_range().start);
             commands.entity(entity).insert(materials.materials[
                 auto_anim.set.get_index_range().start + auto_anim.current_frame
             ].clone());
@@ -58,6 +58,8 @@ fn init_storage<T : AnimSet + Send + Sync + 'static>(
             base_color_texture: Some(asset_server.load(T::get_tile_path(i))),
             alpha_mode: AlphaMode::Blend,
             reflectance: 0.1,
+            double_sided: true,
+            cull_mode: None,
             ..default()
         }));
     }

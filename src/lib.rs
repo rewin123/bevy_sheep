@@ -19,6 +19,7 @@ pub mod torch;
 pub mod wolf;
 pub mod ambient;
 pub mod auto_anim;
+pub mod corpse;
 
 use std::f32::consts::PI;
 
@@ -104,9 +105,10 @@ impl Plugin for GamePlugin {
             global_task::GlobalTaskPlugin,
         ));
 
-        app.add_plugins(
-            ambient::AmbientPlugin
-        );
+        app.add_plugins((
+            ambient::AmbientPlugin,
+            corpse::CorpsePlugin
+        ));
 
         //For long term updates
         app.insert_resource(Time::<Fixed>::from_seconds(1.0));

@@ -45,7 +45,7 @@ fn start_change_safe_area(
         let target_pos = Vec2::new(start_pos.x + pos, start_pos.y + pos);
 
         let mut change = ChangeSafeArea {
-            target_scale: 0.5,
+            target_scale: 0.7,
             start_scale: 1.0,
 
             target_pos: target_pos,

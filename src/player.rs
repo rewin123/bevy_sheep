@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use bevy::{
     input::mouse::MouseWheel,
     pbr::{CascadeShadowConfig, CascadeShadowConfigBuilder},
@@ -9,7 +11,7 @@ use crate::{
     get_sprite_rotation,
     physics::Velocity,
     sprite_material::{create_plane_mesh, SpriteExtension, SpriteMaterial},
-    GameStuff, GameSet,
+    GameStuff, GameSet, auto_anim::{AnimSet, AnimRange, AutoAnimPlugin, AutoAnim},
 };
 
 const DOG_PATH: &str = "test/dog.png";
@@ -48,7 +50,9 @@ impl Plugin for PlayerPlugin {
                 player_movemnt_by_mouse.run_if(in_state(MovementStyle::Mouse)),
             )
             .add_systems(Update, (change_movement_style, bark).in_set(GameSet::Playing))
-            .add_systems(Update, (set_cam_distance, camera_movement, stamina_increse).in_set(GameSet::Playing));
+            .add_systems(Update, (set_cam_distance, camera_movement, stamina_increse).in_set(GameSet::Playing))
+            .add_plugins(AutoAnimPlugin::<PlayerAnim>::default())
+            .add_systems(Update, set_anim_state.in_set(GameSet::Playing));
     }
 }
 
@@ -82,6 +86,36 @@ fn stamina_increse(
             stamina.value = 1.0;
             stamina.blocked = false;
         }
+    }
+}
+
+#[derive(Default)]
+pub enum PlayerAnim {
+    BigBark,
+    Bark,
+    WalkAndBark,
+    Walk,
+    #[default]
+    Idle
+}
+
+impl AnimSet for PlayerAnim {
+    fn get_folder_path() -> String {
+        "dog".to_string()
+    }
+
+    fn get_index_range(&self) -> crate::auto_anim::AnimRange {
+        match self {
+            PlayerAnim::BigBark => AnimRange::new(0, 2),
+            PlayerAnim::Bark => AnimRange::new(3, 5),
+            PlayerAnim::WalkAndBark => AnimRange::new(6,7),
+            PlayerAnim::Walk => AnimRange::new(9, 11),
+            PlayerAnim::Idle => AnimRange::new(12, 15),
+        }
+    }
+
+    fn get_tile_count() -> usize {
+        16
     }
 }
 
@@ -122,31 +156,26 @@ fn spawn_player_by_event(
     mut event_reader: EventReader<SpawnPlayer>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
-    _materials: ResMut<Assets<StandardMaterial>>,
-    mut sprite_material: ResMut<Assets<SpriteMaterial>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for event in event_reader.read() {
         let plane = meshes.add(create_plane_mesh());
-        let material = sprite_material.add(SpriteMaterial {
-            base: StandardMaterial {
+        let material = materials.add(
+            StandardMaterial {
                 base_color_texture: Some(asset_server.load(DOG_PATH)),
                 alpha_mode: AlphaMode::Opaque,
                 ..default()
-            },
-            extension: SpriteExtension {
-                base_teture: Some(asset_server.load(DOG_PATH)),
-            },
-        });
+            });
 
         info!("Spawn player at {:?}", event.position);
 
         commands.spawn((
-            MaterialMeshBundle {
+            PbrBundle {
                 mesh: plane.clone(),
                 material: material.clone(),
                 transform: Transform::from_translation(event.position)
                     .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::new(12.0 / 8.0, 1.0, 1.0)),
+                    .with_scale(Vec3::new(1.0, 1.0, 1.0) * 2.0),
                 ..default()
             },
             Player,
@@ -157,6 +186,11 @@ fn spawn_player_by_event(
                 value: 1.0,
                 blocked: false
             },
+            AutoAnim {
+                set: PlayerAnim::Idle,
+                timer: Timer::from_seconds(0.1, TimerMode::Repeating),
+                current_frame: 0,
+            }
         )).with_children(|parent| {
             parent.spawn((
                 DogBarkSource,
@@ -455,4 +489,38 @@ fn set_cam_distance(
     let dist = (player.translation - camera.translation).dot(camera.forward());
 
     commands.entity(e).insert(CameraDistance(dist));
+}
+
+fn set_anim_state(
+    mut player : Query<(&mut AutoAnim<PlayerAnim>, &Velocity, &mut Transform)>,
+    input: Res<Input<KeyCode>>
+) {
+    let Ok((mut player, vel, mut t)) = player.get_single_mut() else {
+        return;
+    };
+
+    let moving = input.any_pressed([KeyCode::W, KeyCode::S, KeyCode::A, KeyCode::D]);
+    let barking = input.pressed(KeyCode::Space);
+    let big_bark = input.pressed(KeyCode::ControlLeft);
+
+    if big_bark {
+        player.set = PlayerAnim::BigBark;
+    } else {
+        if barking && moving {
+            player.set = PlayerAnim::WalkAndBark;
+        } else if barking {
+            player.set = PlayerAnim::Bark;
+        } else if moving {
+            player.set = PlayerAnim::Walk;
+        } else {
+            player.set = PlayerAnim::Idle;
+        }
+    }
+
+    if vel.0.x > 0.1 {
+        t.rotation = get_sprite_rotation();
+        t.rotate_local_z(PI);
+    } else if vel.0.x < -0.1 {
+        t.rotation = get_sprite_rotation();
+    }
 }

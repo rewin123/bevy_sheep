@@ -77,7 +77,9 @@ impl Plugin for SheepPlugin {
                 .with_spatial_ds(SpatialStructure::KDTree3),
         )
         .add_systems(Update, collect_field)
-        .add_plugins(AutoAnimPlugin::<SheepAnim>::default());
+        .add_plugins(AutoAnimPlugin::<SheepAnim>::default())
+        
+        .add_systems(Update, set_anim_state.in_set(GameSet::Playing));
     }
 }
 
@@ -478,7 +480,7 @@ pub fn setup(
                 material: sheep_material.clone(),
                 transform: Transform::from_xyz(pos.x, pos.y, pos.z)
                     .with_rotation(get_sprite_rotation())
-                    .with_scale(Vec3::new(1.0, 1.0, 1.0) * 1.7),
+                    .with_scale(Vec3::new(1.0, 1.0, 1.0) * 2.0),
                 ..default()
             },
             Sheep::default(),
@@ -592,6 +594,22 @@ fn collect_field(
                     walk.target_velocity = vel.0;
                 }
             }
+        }
+    }
+}
+
+fn set_anim_state(
+    mut sheep : Query<(&mut AutoAnim<SheepAnim>, Option<&GoTo>, Option<&IdleFeeding>, Option<&IsScared>), With<Sheep>>
+) {
+    for (mut anim, go_to, idle, scared) in sheep.iter_mut() {
+        if go_to.is_some() {
+            anim.set = SheepAnim::Walk;
+        } else if idle.is_some() {
+            anim.set = SheepAnim::Feed;
+        } else if scared.is_some() {
+            anim.set = SheepAnim::Walk;
+        } else {
+            anim.set = SheepAnim::Idle;
         }
     }
 }
