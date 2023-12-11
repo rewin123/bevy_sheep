@@ -414,13 +414,13 @@ pub fn update_scared_sheeps(
             let mut mean_nearest_sheep = Vec3::ZERO;
             let mut count = 0.0;
             for (pos, _) in nearest.iter().skip(1) {
-                if (*pos - t.translation).length() < 5.0 {
+                // if (*pos - t.translation).length() < 5.0 {
                     let ddog = *pos - dog_transform.translation;
                     if ddog.dot(dog_dpos) >= 0.0 {
                         mean_nearest_sheep += *pos;
                         count += 1.0;
                     }
-                }
+                // }
             }
             if count > 0.0 {
                 let mean_nearest_sheep = mean_nearest_sheep / (count as f32);
