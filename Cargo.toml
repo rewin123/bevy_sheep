@@ -37,7 +37,3 @@ webbrowser = { version = "0.8", features = ["hardened"] }
 winit = { version = "0.28.7", default-features = false }
 image = { version = "0.24", default-features = false }
 bevy_spatial = "0.7.0"
-bevy_embedded_assets = "0.9.1"
-
-[build-dependencies]
-embed-resource = "1.4"

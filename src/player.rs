@@ -292,7 +292,7 @@ fn player_movemnt_by_mouse(
 
     vel.0 = vel.0.clamp_length_max(speed);
 
-    if vel.0.length() > 0.01 {
+    if vel.0.length() > 1.0 {
         footstep.play();
     } else {
         footstep.pause();
@@ -423,7 +423,7 @@ fn player_movemnt_by_wasd(
 
     player.0 = player.0.clamp_length_max(speed);
 
-    if player.0.length() > 0.01 {
+    if player.0.length() > 1.0 {
         footstep.play();
     } else {
         footstep.pause();
@@ -517,10 +517,10 @@ fn set_anim_state(
         }
     }
 
-    if vel.0.x > 0.5 {
+    if vel.0.x > 1.0 {
         t.rotation = get_sprite_rotation();
         t.rotate_local_z(PI);
-    } else if vel.0.x < -0.5 {
+    } else if vel.0.x < -1.0 {
         t.rotation = get_sprite_rotation();
     }
 }

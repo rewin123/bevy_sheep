@@ -13,17 +13,12 @@ use bevy_game::test_level::LevelSize;
 use std::io::Cursor;
 use winit::window::Icon;
 
-use bevy_embedded_assets::EmbeddedAssetPlugin;
-
 fn main() {
     App::new()
         .insert_resource(Msaa::Off)
         .insert_resource(AssetMetaCheck::Never)
         .insert_resource(ClearColor(Color::rgb(0.4, 0.4, 0.4)))
         .init_resource::<LevelSize>()
-        .add_plugins(EmbeddedAssetPlugin {
-            mode : bevy_embedded_assets::PluginMode::ReplaceDefault
-        })
         .add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {
@@ -39,14 +34,7 @@ fn main() {
                     }),
                     ..default()
                 })
-                .set(ImagePlugin::default_nearest())
-                .set(TaskPoolPlugin {
-                    task_pool_options: TaskPoolOptions {
-                        max_total_threads: 1,
-                        ..default()
-                    },
-                    ..default()
-                }),
+                .set(ImagePlugin::default_nearest()),
         )
         .insert_resource(DirectionalLightShadowMap { size: 4096 })
         .add_plugins(GamePlugin)

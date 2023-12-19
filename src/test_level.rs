@@ -8,7 +8,7 @@ use crate::{
     player::SpawnPlayer,
     safe_area::{LandSafeArea, SafeArea},
     shepherd::SpawnShepherd,
-    sprite_material::create_plane_mesh,
+    sprite_material::{create_plane_mesh, SpriteMaterial},
     sunday::{AMBIENT_BASE_ILLUMINANCE, DAY_SUN_COLOR, SUN_BASE_ILLUMINANCE},
     torch::{SpawnTorch, TORCH_BASE_RADIUS},
     GameStuff,
@@ -35,6 +35,7 @@ pub fn setup(
     level_size: Res<LevelSize>,
     mut create_level_ui: EventWriter<CreateLevelUi>,
     mut spawn_shepherd: EventWriter<SpawnShepherd>,
+    mut sprite_materials : ResMut<Assets<SpriteMaterial>>,
 ) {
     //spawn sun
     let mut cascades = CascadeShadowConfigBuilder::default();
@@ -90,7 +91,7 @@ pub fn setup(
         }
 
         commands
-            .spawn(PbrBundle {
+            .spawn(MaterialMeshBundle {
                 mesh: square.clone(),
                 material: tree_material.clone(),
                 transform: Transform::from_xyz(pos.x, pos.y, pos.z)
