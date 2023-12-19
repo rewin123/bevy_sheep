@@ -26,6 +26,15 @@ fn startup(
     });
 
     commands.spawn(AudioBundle {
+        source: asset_server.load("audio/main-theme.ogg"),
+        settings: PlaybackSettings {
+            mode: PlaybackMode::Loop,
+            ..Default::default()
+        },
+        ..default()
+    });
+
+    commands.spawn(AudioBundle {
         source: asset_server.load("audio/sheep.ogg"),
         settings: PlaybackSettings {
             mode: PlaybackMode::Loop,
